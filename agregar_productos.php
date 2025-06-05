@@ -1,5 +1,5 @@
 <?php
-//Iniciamos sesión para poder usar las varables de sesión
+//Iniciamos sesión para poder usar las variables de sesión
 session_start();
 
 //Conectamos a la base de datos
@@ -18,14 +18,14 @@ if ($SERVER['REQUEST_METHOD'] === 'POST') {
    $nombre = $_POST['nombre'];
    $descripcion = $_POST['descripcion'];
    $precio = $_POST['precio'];
-// Obtene la imagen cargada por el usuario 
+// Obtiene la imagen cargada por el usuario 
    $imagen_nombre = $_FILES['imagen']['name']; 
     $imagen_tmp = $_FILES['imagen']['tmp_name']; 
     $ruta_destino = '../imagenes/' . basename($imagen_nombre);
 
    // Mueve la imagen desde su ubicacion a la carpeta destino 
    if (move_uploaded_file($imagen_tmp, $ruta_destino)) {
-      // Si la imagen subio correctamente, se inserta el producto de la base de datos
+      // Si la imagen se subio correctamente, se inserta el producto de la base de datos
        $query = "INSERT INTO productos (nombre, descripcion, precio, imagen) VALUES (?, ?, ?, ?)";
         $stmt = $conexion->prepare($query);
 
