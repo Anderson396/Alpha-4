@@ -1,1 +1,25 @@
+/* Reseteo de márgenes y padding */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #c36376;
+  font-size: 55550px;
+  color: #4a4a4a;
+}
+
+h1 {
+  text-align: center;
+  padding: 1rem;
+  color: #d97b93;
+  background-color:#d6909e;
+  border-bottom: 2px solid #fbc4d8;
+  font-size: 55550px;
+}
+
 
