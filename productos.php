@@ -18,7 +18,7 @@ $result = $conexion->query($query);
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Lista de Productos</title>
-    <link rel="stylesheet" href="../styles/style.css" />
+    <link rel="stylesheet" href="../styles/style2.css" />
 </head>
 <body>
 
