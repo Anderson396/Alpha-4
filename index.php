@@ -10,10 +10,10 @@ $result = mysqli_query($conexion, $query); // Ejecuta la consulta
 
 <main class="container">
     <h1>BIENVENIDOS A NUESTRA TIENDA VIRTUAL DE "DULCES CREACIONES"</h1>
-    <link rel="stylesheet" href="/tienda_virtual/styles/style.css" />
-
+    <link rel="stylesheet" href="/pagina_pasteleria/styles/styles.css" />
+    
 <!-- Sección para guardar a todos los productos -->
- <sectoion class="productos">
+ <section class="productos">
     <?php while($producto = mysqli_fetch_assoc($result)): ?>
     <!-- Presentamos los productos como un artículo independiente -->
             <article class="producto" role="region" aria-labelledby="producto-<?php echo (int)$producto['id_producto']; ?>">
