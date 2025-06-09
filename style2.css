@@ -1,1 +1,307 @@
+/* Estilos generales para el cuerpo de la página */
+body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f7f6; /* Un gris muy claro para el fondo */
+    color: #333; /* Color de texto base oscuro */
+    line-height: 1.6;
+    box-sizing: border-box; /* Incluye padding y border en el tamaño total */
+    background: #EEAECA;
+background: radial-gradient(circle,rgba(238, 174, 202, 1) 0%, rgba(148, 187, 233, 1) 100%);
+}
 
+/* Contenedor principal para centrar el contenido y limitar el ancho */
+.container {
+    width: 90%;
+    max-width: 1200px; /* Ancho máximo para el contenido principal */
+    margin: 20px auto; /* Centrar el contenedor y darle margen superior/inferior */
+    padding: 0 15px; /* Pequeño padding a los lados */
+    box-sizing: border-box;
+}
+
+/* Estilos para encabezados (h1, h2, h3, etc.) */
+h1, h2, h3 {
+    color: #2c3e50; /* Un azul oscuro para los encabezados */
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+/* Estilos para párrafos */
+p {
+    margin-bottom: 15px;
+}
+
+/* --- Navegación (Navbar) --- */
+.navbar {
+    background-color: #3498db; /* Azul vibrante para la barra de navegación */
+    color: rgb(255, 255, 255);
+    padding: 15px 0;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.navbar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex; /* Para poner los elementos en línea */
+    justify-content: center; /* Centrar los elementos del menú */
+}
+
+.navbar ul li {
+    margin: 0 15px;
+}
+
+.navbar ul li a {
+    color: rgb(255, 255, 255);
+    text-decoration: none;
+    font-weight: bold;
+    padding: 5px 10px;
+    transition: background-color 0.3s ease;
+}
+
+.navbar ul li a:hover {
+    background-color: rgba(255, 255, 255, 0.2); /* Fondo ligeramente transparente al pasar el mouse */
+    border-radius: 4px;
+}
+
+/* --- Botones Generales (`.btn`) --- */
+.btn {
+    display: inline-block; /* Permite aplicar padding y margin */
+    background-color: #007bff; /* Azul estándar para botones primarios */
+    color: rgb(255, 255, 255);
+    padding: 10px 18px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    text-decoration: none; /* Quitar subrayado en enlaces que actúan como botones */
+    text-align: center;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.btn:hover {
+    background-color: #0056b3; /* Azul más oscuro al pasar el mouse */
+    transform: translateY(-1px); /* Ligero efecto de elevación */
+}
+
+.btn-danger { /* Botón para acciones peligrosas como eliminar */
+    background-color: #dc3545; /* Rojo */
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+}
+
+.btn-success { /* Botón para acciones exitosas o de guardar */
+    background-color: #28a745; /* Verde */
+}
+
+.btn-success:hover {
+    background-color: #218838;
+}
+
+/* --- Formularios (Aplicado a contenedores de formulario como .producto-form) --- */
+.producto-form, .login-form, .register-form { /* Clases para contenedores de formularios específicos */
+    background-color: #edcbe9;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    /* ANCHO MODIFICADO PARA EL CUADRO */
+    max-width: 650px; /* Aumentado de 500px a 650px */
+    margin: 20px auto; /* Centrar formularios */
+    box-sizing: border-box;
+}
+
+form label {
+    display: block;
+    margin-bottom: 8px;
+    color: #555;
+    font-weight: bold;
+}
+
+form input[type="text"],
+form input[type="password"],
+form input[type="email"],
+form input[type="number"],
+form textarea,
+form input[type="file"] {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1em;
+    box-sizing: border-box;
+}
+
+form input[type="file"] {
+    background-color: #f9f9f9;
+}
+
+form button[type="submit"] {
+    background-color: #28a745; /* Verde para enviar formularios */
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1.1em;
+    width: 100%;
+    transition: background-color 0.3s ease;
+}
+
+form button[type="submit"]:hover {
+    background-color: #218838;
+}
+
+/* --- Mensajes de Éxito y Error --- */
+.message {
+    padding: 12px 20px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.error-message {
+    background-color: #ffe0e0; /* Fondo rojo claro */
+    color: #cc0000; /* Texto rojo oscuro */
+    border: 1px solid #cc0000;/
+}
+
+.success-message {
+    background-color: #e6ffe6; /* Fondo verde claro */
+    color: #28a745; /* Texto verde oscuro */
+    border: 1px solid #28a745;
+}
+
+/* --- Tablas (si tienes una lista de productos) --- */
+.table-responsive {
+    overflow-x: auto; /* Permite scroll horizontal en tablas grandes en móviles */
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background-color: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    overflow: hidden; /* Para que los bordes redondeados se apliquen bien */
+}
+
+table th, table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+table th {
+    background-color: #f2f2f2;
+    color: #555;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 0.9em;
+}
+
+table tbody tr:hover {
+    background-color: #f9f9f9;
+}
+
+/* Estilos para el pie de página */
+footer {
+    text-align: center;
+    padding: 1px; /* Reducido de 25px a 15px para hacer la línea "menos larga" visualmente */
+    margin-top: 15px;
+    border-top: 0px solid #eee;
+    color: #000000;
+    font-size: 0.9em;
+    background-color: #000000;
+    width: 100%;  /* Asegura que el footer ocupe todo el ancho */
+    box-sizing: border-box; /* Para que el padding no agregue ancho extra */
+    background: #EEAECA;
+background: radial-gradient(circle,rgba(238, 174, 202, 1) 0%, rgba(148, 187, 233, 1) 100%);
+
+}
+
+/* --- Media Queries para Responsividad --- */
+@media (max-width: 768px) {
+    .container {
+        width: 95%;
+        margin: 15px auto;
+    }
+
+    .navbar ul {
+        flex-direction: column; /* Apilar elementos de navegación en pantallas pequeñas */
+        align-items: center;
+    }
+
+    .navbar ul li {
+        margin: 10px 0;
+    }
+
+    h1, h2 {
+        font-size: 1.5em;
+    }
+
+    .btn {
+        padding: 10px 15px;
+        font-size: 0.95em;
+    }
+
+    form input, form textarea, form button {
+        padding: 10px;
+        font-size: 0.95em;
+    }
+
+    /* Ajuste para tablas en pantallas pequeñas */
+    table, thead, tbody, th, td, tr {
+        display: block;
+    }
+
+    thead tr {
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+    }
+
+    table tr {
+        border: 1px solid #ccc;
+        margin-bottom: 15px;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    table td {
+        border: none;
+        border-bottom: 1px solid #eee;
+        position: relative;
+        padding-left: 50%; /* Espacio para la etiqueta */
+        text-align: right;
+    }
+
+    table td:before {
+        position: absolute;
+        top: 0;
+        left: 6px;
+        width: 45%;
+        padding-right: 10px;
+        white-space: nowrap;
+        text-align: left;
+        font-weight: bold;
+        color: #555;
+    }
+}
+
+@media (max-width: 480px) {
+    .navbar {
+        padding: 10px 0;
+    }
+
+    .navbar ul li {
+        margin: 8px 0;
+    }
+}
