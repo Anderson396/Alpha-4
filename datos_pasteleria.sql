@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 05-06-2025 a las 15:59:03
+-- Tiempo de generación: 09-06-2025 a las 21:15:49
 -- Versión del servidor: 10.4.32-MariaDB
--- Versión de PHP: 8.2.12
+-- Versión de PHP: 8.0.30
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -20,8 +20,6 @@ SET time_zone = "+00:00";
 --
 -- Base de datos: `datos_pasteleria`
 --
-CREATE DATABASE `datos_pasteleria`;
-USE `datos_pasteleria`;
 
 -- --------------------------------------------------------
 
@@ -155,7 +153,10 @@ INSERT INTO `productos` (`id_producto`, `nombre`, `descripcion`, `precio`, `tipo
 (9, 'Café elado', 'Café delicioso elado', 54.89, 'Bebida', 'Cafe_helado.jpeg'),
 (10, 'Crepas', 'Crepas jugosas', 52.97, 'Bocadillo', 'Crepas.jpeg'),
 (11, 'Tres leches', 'Pastel grande y pequeño de tres leches', 87.54, 'Postre', 'Tres_leches.jpeg'),
-(12, 'Limonada de fresa', 'Limonada combinada con fresa', 98.45, 'Bebida', 'Limonada_de_fresa.jpeg');
+(12, 'Limonada de fresa', 'Limonada combinada con fresa', 98.45, 'Bebida', 'Limonada_de_fresa.jpeg'),
+(13, 'Pastel de chocolate', 'solo de chocolate', 10.00, '', 'istockphoto-2165404407-612x612.jpg'),
+(14, 'Postre de manzana', 'solo de manzana', 15.00, '', 'dessert-6795726_640.jpg'),
+(15, 'Pastel de almendra', 'muchas almendras ', 15.00, '', 'images.jpeg');
 
 -- --------------------------------------------------------
 
@@ -169,6 +170,16 @@ CREATE TABLE `proveedores` (
   `producto` varchar(100) NOT NULL,
   `fecha_ultima_compra` date NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `proveedores`
+--
+
+INSERT INTO `proveedores` (`id_proveedor`, `nombre`, `producto`, `fecha_ultima_compra`) VALUES
+(1, 'Fernando palomo', 'Harina', '0000-00-00'),
+(2, 'Alfonso Cardinal', 'Leche', '0000-00-00'),
+(3, 'Rosa Maurillo', 'Huevos', '0000-00-00'),
+(4, 'Margarito Molina', 'Azúcar', '0000-00-00');
 
 --
 -- Índices para tablas volcadas
@@ -283,13 +294,13 @@ ALTER TABLE `pedidos`
 -- AUTO_INCREMENT de la tabla `productos`
 --
 ALTER TABLE `productos`
-  MODIFY `id_producto` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id_producto` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT de la tabla `proveedores`
 --
 ALTER TABLE `proveedores`
-  MODIFY `id_proveedor` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_proveedor` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- Restricciones para tablas volcadas
