@@ -1,0 +1,344 @@
+/* Estilos generales para el cuerpo de la página */
+body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f7f6; /* Un gris muy claro para el fondo */
+    color: #333; /* Color de texto base oscuro */
+    line-height: 1.6;
+    box-sizing: border-box; /* Incluye padding y border en el tamaño total */
+      background: #EEAECA;
+background: radial-gradient(circle,rgba(238, 174, 202, 1) 0%, rgba(148, 187, 233, 1) 100%);
+}
+
+/* Contenedor principal para centrar el contenido y limitar el ancho */
+.container {
+    width: 90%;
+    max-width: 1200px; /* Ancho máximo para el contenido principal */
+    margin: 20px auto; /* Centrar el contenedor y darle margen superior/inferior */
+    padding: 0 15px; /* Pequeño padding a los lados */
+    box-sizing: border-box;
+}
+
+/* Estilos para encabezados (h1, h2, h3, etc.) */
+h1, h2, h3 {
+    color: #000000; /* Un azul oscuro para los encabezados */
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+/* Estilos para párrafos */
+p {
+    margin-bottom: 15px;
+}
+
+/* --- Navegación (Navbar) --- */
+.navbar {
+    background-color: #3498db; /* Azul vibrante para la barra de navegación */
+    color: white;
+    padding: 15px 0;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.navbar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex; /* Para poner los elementos en línea */
+    justify-content: center; /* Centrar los elementos del menú */
+}
+
+.navbar ul li {
+    margin: 0 15px;
+}
+
+.navbar ul li a {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    padding: 5px 10px;
+    transition: background-color 0.3s ease;
+}
+
+.navbar ul li a:hover {
+    background-color: rgba(255, 255, 255, 0.2); /* Fondo ligeramente transparente al pasar el mouse */
+    border-radius: 4px;
+}
+
+/* --- Botones Generales (`.btn`) --- */
+.btn {
+    display: inline-block; /* Permite aplicar padding y margin */
+    background-color: #007bff; /* Azul estándar para botones primarios */
+    color: white;
+    padding: 10px 18px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    text-decoration: none; /* Quitar subrayado en enlaces que actúan como botones */
+    text-align: center;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    margin: 5px; /* Pequeño margen para separar botones */
+}
+
+.btn:hover {
+    background-color: #0056b3; /* Azul más oscuro al pasar el mouse */
+    transform: translateY(-1px); /* Ligero efecto de elevación */
+}
+
+/* Clases específicas para botones de acción (Modificar, Eliminar) */
+/* El botón de modificar puede usar el estilo .btn por defecto o uno específico si quieres */
+.btn.modificar { /* Si usas una clase específica para modificar */
+    background-color: #ffc107; /* Amarillo/naranja */
+    color: #333;
+}
+
+.btn.modificar:hover {
+    background-color: #e0a800;
+}
+
+.btn.eliminar { /* Para el botón de eliminar */
+    background-color: #dc3545; /* Rojo */
+}
+
+.btn.eliminar:hover {
+    background-color: #c82333;
+}
+
+.btn-success { /* Para el botón "Agregar Producto" */
+    background-color: #28a745; /* Verde */
+}
+
+.btn-success:hover {
+    background-color: #218838;
+}
+
+/* --- Formularios (Aplicado a contenedores de formulario como .producto-form) --- */
+/* Esta sección es relevante si tienes el formulario de agregar/modificar en el mismo style.css */
+.producto-form, .login-form, .register-form { /* Clases para contenedores de formularios específicos */
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 650px; /* Ancho máximo común para formularios */
+    margin: 20px auto; /* Centrar formularios */
+    box-sizing: border-box;
+}
+
+form label {
+    display: block;
+    margin-bottom: 8px;
+    color: #555;
+    font-weight: bold;
+}
+
+form input[type="text"],
+form input[type="password"],
+form input[type="email"],
+form input[type="number"],
+form textarea,
+form input[type="file"] {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1em;
+    box-sizing: border-box;
+}
+
+form input[type="file"] {
+    background-color: #f9f9f9;
+}
+
+form button[type="submit"] {
+    background-color: #28a745; /* Verde para enviar formularios */
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1.1em;
+    width: 100%;
+    transition: background-color 0.3s ease;
+}
+
+form button[type="submit"]:hover {
+    background-color: #218838;
+}
+
+/* --- Mensajes de Éxito y Error --- */
+.message {
+    padding: 12px 20px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.error-message {
+    background-color: #ffe0e0; /* Fondo rojo claro */
+    color: #cc0000; /* Texto rojo oscuro */
+    border: 1px solid #cc0000;
+}
+
+.success-message {
+    background-color: #e6ffe6; /* Fondo verde claro */
+    color: #28a745; /* Texto verde oscuro */
+    border: 1px solid #28a745;
+}
+
+
+/* --- Tablas (Específico para la lista de productos) --- */
+.table-responsive {
+    overflow-x: auto; /* Permite scroll horizontal en tablas grandes en móviles */
+    margin-bottom: 25px; /* Espacio debajo de la tabla */
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse; /* Elimina el espacio entre celdas */
+    margin-top: 20px;
+    background-color: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border-radius: 8px; /* Bordes ligeramente redondeados para la tabla */
+    overflow: hidden; /* Asegura que los bordes redondeados se apliquen bien */
+}
+
+table th, table td {
+    padding: 12px 15px; /* Espaciado dentro de las celdas */
+    text-align: left;
+    border-bottom: 1px solid #ddd; /* Línea divisoria entre filas */
+    vertical-align: middle; /* Centrado vertical del contenido de la celda */
+}
+
+table th {
+    background-color: #f2f2f2; /* Fondo para los encabezados de columna */
+    color: #555;
+    font-weight: bold;
+    text-transform: uppercase; /* Texto en mayúsculas para los encabezados */
+    font-size: 0.9em;
+}
+
+table tbody tr:hover {
+    background-color: #f9f9f9; /* Efecto de resaltado al pasar el mouse por una fila */
+}
+
+/* Estilo para las imágenes dentro de la tabla */
+table td img {
+    max-width: 60px; /* Tamaño máximo para las imágenes */
+    height: auto;
+    border-radius: 4px; /* Ligeros bordes redondeados para las imágenes */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Alineación de las celdas de acciones */
+table td:last-child {
+    text-align: center; /* Centrar los botones de acción */
+    white-space: nowrap; /* Evita que los botones se envuelvan a la siguiente línea */
+}
+
+
+/* Estilos para el pie de página */
+footer {
+    text-align: center;
+    padding: 15px; /* Reducido de 25px a 15px para hacer la línea "menos larga" visualmente */
+    margin-top: 8px;
+    border-top: 0px solid #eee; /* La línea gris clara */
+    color: #777;
+    font-size: 1.9em;
+    background-color: #f9f9f9; /* Fondo claro para el footer */
+    width: 100%; /* Asegura que el footer ocupe todo el ancho */
+    box-sizing: border-box; /* Para que el padding no agregue ancho extra */
+      background: #EEAECA;
+background: radial-gradient(circle,rgba(238, 174, 202, 1) 0%, rgba(148, 187, 233, 1) 100%);
+}
+
+/* --- Media Queries para Responsividad (adaptación a diferentes tamaños de pantalla) --- */
+@media (max-width: 768px) {
+    .container {
+        width: 95%;
+        margin: 15px auto;
+    }
+
+    .navbar ul {
+        flex-direction: column; /* Apilar elementos de navegación en pantallas pequeñas */
+        align-items: center;
+    }
+
+    .navbar ul li {
+        margin: 10px 0;
+    }
+
+    h1, h2 {
+        font-size: 1.5em;
+    }
+
+    .btn {
+        padding: 10px 15px;
+        font-size: 0.95em;
+    }
+
+    /* Ajuste para tablas en pantallas pequeñas: hace que la tabla se vea como tarjetas */
+    table, thead, tbody, th, td, tr {
+        display: block; /* Cada parte de la tabla se convierte en un bloque */
+    }
+
+    thead tr {
+        position: absolute; /* Oculta los encabezados de la tabla original */
+        top: -9999px;
+        left: -9999px;
+    }
+
+    table tr {
+        border: 1px solid #ccc;
+        margin-bottom: 15px;
+        border-radius: 8px;
+        overflow: hidden;
+        background-color: #fff;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    table td {
+        border: none;
+        border-bottom: 1px solid #eee;
+        position: relative;
+        padding-left: 50%; /* Espacio para la etiqueta del pseudo-elemento */
+        text-align: right;
+    }
+
+    table td:last-child {
+        text-align: center; /* Asegura que los botones de acción se centren */
+        padding-left: 15px; /* Restaura padding normal si la última celda no necesita etiqueta */
+    }
+
+    table td:before {
+        /* Muestra la etiqueta del encabezado como un pseudo-elemento */
+        position: absolute;
+        top: 0;
+        left: 6px;
+        width: 45%;
+        padding-right: 10px;
+        white-space: nowrap;
+        text-align: left;
+        font-weight: bold;
+        color: #555;
+    }
+    /* Pseudo-elementos para cada columna para que se vea la etiqueta en móviles */
+    table td:nth-of-type(1):before { content: "Nombre:"; }
+    table td:nth-of-type(2):before { content: "Precio:"; }
+    table td:nth-of-type(3):before { content: "Imagen:"; }
+    table td:nth-of-type(4):before { content: "Acciones:"; }
+}
+
+@media (max-width: 480px) {
+    .navbar {
+        padding: 10px 0;
+    }
+
+    .navbar ul li {
+        margin: 8px 0;
+    }
+}
