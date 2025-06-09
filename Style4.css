@@ -1,0 +1,49 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(to bottom right, #b2c9e7, #f4c0dd);
+}
+
+h1 {
+    text-align: center;
+    font-family: 'Savate', sans-serif;
+    font-size: 28px;
+    margin-top: 20px;
+}
+
+.contenedor {
+    background-color: #f8c9e0;
+    width: 60%;
+    margin: 60px auto;
+    padding: 150px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Encabezado */
+.encabezado-lista {
+    display: flex;
+    justify-content: space-between;
+    font-weight: bold;
+    padding: 10px 0;
+    border-bottom: 2px solid #fff;
+    font-size: 16px;
+    margin-bottom: 15px;
+}
+
+/* Fila de proveedor */
+.fila-proveedor {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #fff;
+    font-size: 15px;
+}
+
+.izquierda {
+    text-align: left;
+}
+
+.derecha {
+    text-align: right;
+}
