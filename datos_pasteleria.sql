@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 09-06-2025 a las 21:15:49
+-- Tiempo de generación: 09-06-2025 a las 21:57:16
 -- Versión del servidor: 10.4.32-MariaDB
--- Versión de PHP: 8.0.30
+-- Versión de PHP: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -32,6 +32,26 @@ CREATE TABLE `carrito` (
   `cantidad` decimal(10,2) NOT NULL,
   `id_pedido` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `categoria`
+--
+
+CREATE TABLE `categoria` (
+  `id_categoria` int(11) NOT NULL,
+  `nombre` varchar(200) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `categoria`
+--
+
+INSERT INTO `categoria` (`id_categoria`, `nombre`) VALUES
+(1, 'Pasteles'),
+(2, 'Cafés'),
+(3, 'Bocadillos');
 
 -- --------------------------------------------------------
 
@@ -134,29 +154,27 @@ CREATE TABLE `productos` (
   `descripcion` varchar(100) NOT NULL,
   `precio` decimal(10,2) NOT NULL,
   `tipo` varchar(100) NOT NULL,
-  `imagen` varchar(100) NOT NULL
+  `imagen` varchar(100) NOT NULL,
+  `id_categoria` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `productos`
 --
 
-INSERT INTO `productos` (`id_producto`, `nombre`, `descripcion`, `precio`, `tipo`, `imagen`) VALUES
-(1, 'Alfajores', 'Bocadilos sabrosos', 5.80, 'Bocadillo', 'Alfajores.jpeg'),
-(2, 'Café caliente', 'Café sabroso para tomar', 7.89, 'Bebida', 'Cafe_caliente.jpeg'),
-(3, 'Pastel de fresa', 'Bocadilos sabrosos', 6.00, 'Postre', 'Pastel_de_fresas.jpeg'),
-(4, 'Pastel de chocolate', 'Pastel de chocolate grande', 56.99, 'Postre', 'patel_de_chocolate.jpeg'),
-(5, 'Cachos', 'Cachos rellenos de manjar', 2.99, 'Bocadillo', 'cachos.jpeg'),
-(6, 'Cheescake ', 'Cheescakes pequeños para comer', 98.34, 'Postre', 'cheescake.jpeg'),
-(7, 'Cupcakes', 'Cupcakes de bocadillos', 56.34, 'Postre', 'Cupcakes.jpeg'),
-(8, 'Limonada', 'Limonada de limon', 8.34, 'Bebida', 'Limonada.jpeg'),
-(9, 'Café elado', 'Café delicioso elado', 54.89, 'Bebida', 'Cafe_helado.jpeg'),
-(10, 'Crepas', 'Crepas jugosas', 52.97, 'Bocadillo', 'Crepas.jpeg'),
-(11, 'Tres leches', 'Pastel grande y pequeño de tres leches', 87.54, 'Postre', 'Tres_leches.jpeg'),
-(12, 'Limonada de fresa', 'Limonada combinada con fresa', 98.45, 'Bebida', 'Limonada_de_fresa.jpeg'),
-(13, 'Pastel de chocolate', 'solo de chocolate', 10.00, '', 'istockphoto-2165404407-612x612.jpg'),
-(14, 'Postre de manzana', 'solo de manzana', 15.00, '', 'dessert-6795726_640.jpg'),
-(15, 'Pastel de almendra', 'muchas almendras ', 15.00, '', 'images.jpeg');
+INSERT INTO `productos` (`id_producto`, `nombre`, `descripcion`, `precio`, `tipo`, `imagen`, `id_categoria`) VALUES
+(1, 'Alfajores', 'Bocadilos sabrosos', 5.80, 'Bocadillo', 'Alfajores.jpeg', 3),
+(2, 'Café caliente', 'Café sabroso para tomar', 7.89, 'Bebida', 'Cafe_caliente.jpeg', 2),
+(3, 'Pastel de fresa', 'Bocadilos sabrosos', 6.00, 'Postre', 'Pastel_de_fresas.jpeg', 1),
+(4, 'Pastel de chocolate', 'Pastel de chocolate grande', 56.99, 'Postre', 'patel_de_chocolate.jpeg', 1),
+(5, 'Cachos', 'Cachos rellenos de manjar', 2.99, 'Bocadillo', 'cachos.jpeg', 3),
+(6, 'Cheescake ', 'Cheescakes pequeños para comer', 98.34, 'Postre', 'cheescake.jpeg', 3),
+(7, 'Cupcakes', 'Cupcakes de bocadillos', 56.34, 'Postre', 'Cupcakes.jpeg', 3),
+(8, 'Limonada', 'Limonada de limon', 8.34, 'Bebida', 'Limonada.jpeg', 2),
+(9, 'Café elado', 'Café delicioso elado', 54.89, 'Bebida', 'Cafe_helado.jpeg', 2),
+(10, 'Crepas', 'Crepas jugosas', 52.97, 'Bocadillo', 'Crepas.jpeg', 3),
+(11, 'Tres leches', 'Pastel grande y pequeño de tres leches', 87.54, 'Postre', 'Tres_leches.jpeg', 1),
+(12, 'Limonada de fresa', 'Limonada combinada con fresa', 98.45, 'Bebida', 'Limonada_de_fresa.jpeg', 2);
 
 -- --------------------------------------------------------
 
@@ -191,6 +209,12 @@ INSERT INTO `proveedores` (`id_proveedor`, `nombre`, `producto`, `fecha_ultima_c
 ALTER TABLE `carrito`
   ADD PRIMARY KEY (`id_carrito`),
   ADD KEY `id_pedido` (`id_pedido`);
+
+--
+-- Indices de la tabla `categoria`
+--
+ALTER TABLE `categoria`
+  ADD PRIMARY KEY (`id_categoria`);
 
 --
 -- Indices de la tabla `clientes`
@@ -236,7 +260,8 @@ ALTER TABLE `pedidos`
 -- Indices de la tabla `productos`
 --
 ALTER TABLE `productos`
-  ADD PRIMARY KEY (`id_producto`);
+  ADD PRIMARY KEY (`id_producto`),
+  ADD KEY `fk_categoria_producto` (`id_categoria`);
 
 --
 -- Indices de la tabla `proveedores`
@@ -294,13 +319,13 @@ ALTER TABLE `pedidos`
 -- AUTO_INCREMENT de la tabla `productos`
 --
 ALTER TABLE `productos`
-  MODIFY `id_producto` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `id_producto` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
 
 --
 -- AUTO_INCREMENT de la tabla `proveedores`
 --
 ALTER TABLE `proveedores`
-  MODIFY `id_proveedor` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id_proveedor` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- Restricciones para tablas volcadas
@@ -330,6 +355,12 @@ ALTER TABLE `ingredientes`
 --
 ALTER TABLE `pedidos`
   ADD CONSTRAINT `productos` FOREIGN KEY (`id_producto`) REFERENCES `productos` (`id_producto`);
+
+--
+-- Filtros para la tabla `productos`
+--
+ALTER TABLE `productos`
+  ADD CONSTRAINT `fk_categoria_producto` FOREIGN KEY (`id_categoria`) REFERENCES `categoria` (`id_categoria`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
