@@ -13,7 +13,7 @@ $resultado = $conexion->query($query);
     <meta charset="UTF-8">
     <title>Listado de Proveedores</title>
     <link href="https://fonts.googleapis.com/css2?family=Savate&display=swap" rel="stylesheet"> <!-- Fuente bonita -->
-    <link rel="stylesheet" href="../styles/Style4.css"> <!-- CSS externo -->
+    <link rel="stylesheet" href="../styles/styles2.css"> <!-- CSS externo -->
 </head>
 <body>
     <main class="contenedor">
@@ -30,6 +30,12 @@ $resultado = $conexion->query($query);
                     <h3><span class="izquierda"><?php echo htmlspecialchars($proveedor['nombre']); ?></span></h3>
                     <h3><span class="derecha"><?php echo htmlspecialchars($proveedor['producto']); ?></span></h3>
                 </div>
+                 <td>
+                    
+            <!-- Enlaces para modificar y eliminar con confirmación -->
+            <a href="editar_proveedores.php?id=<?php echo $proveedor['id_proveedor']; ?>" class="btn">Editar</a>
+            <a href="eliminar_proveedores.php?id=<?php echo $proveedor['id_proveedor']; ?>" class="btn" onclick="return confirm('¿Seguro que deseas eliminar este proveedor?')">Eliminar</a>
+         </td>
             <?php endwhile; ?>
         <?php else: ?>
             <p>No hay proveedores registrados.</p>
