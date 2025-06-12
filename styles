@@ -6,20 +6,89 @@
 }
 
 body {
-  margin: 0;
-  font-family: 'Segoe UI', sans-serif;
-  background-color: #c36376;
-  font-size: 55550px;
-  color: #4a4a4a;
+  font-family: Arial, sans-serif;
+  color: #843d30;
+  padding: 2rem;
+  background: radial-gradient(circle,rgba(238, 174, 202, 1) 0%, rgba(184, 187, 233, 1 ) 100%);
 }
 
+/* Encabezado principal */
 h1 {
   text-align: center;
-  padding: 1rem;
-  color: #d97b93;
-  background-color:#d6909e;
-  border-bottom: 2px solid #fbc4d8;
-  font-size: 55550px;
+  font-size: 2rem;
+  margin-bottom: 2rem;
+  color: #843d30;
 }
+/* Carrusel de productos en fila horizontal */
+.productos {
+    display: flex;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    gap: 10px;
+    padding: 20px;
+    position: relative;
+    white-space: nowrap;
+    align-items: center;
+}
+.btn-agregar {
+    background-color: #c96d85;
+    color: white;
+    border: none;
+    padding: 10px;
+    margin-top: 10px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+.btn-agregar:hover {
+    background-color: #a8506a;
+}
+
+/* Eliminar la barra de scroll visual */
+.productos::-webkit-scrollbar {
+    display: none;
+}
+.productos {
+    -ms-overflow-style: none;  /* IE/Edge */
+    scrollbar-width: none;     /* Firefox */
+}
+
+/* Cada producto solo muestra la imagen, sin marco */
+.producto {
+    flex: 0 0 auto;
+}
+
+/* Imágenes: mismo tamaño, limpias */
+.producto img {
+    width: 300px;
+    height: 300px;
+    object-fit: cover;
+    display: block;
+}
+
+/* Flechas */
+.flecha {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: rgba(140, 97, 45, 0.5);
+    color: rgb(205, 81, 147);
+    border: none;
+    padding: 10px;
+    font-size: 24px;
+    cursor: pointer;
+    z-index: 100;
+    border-radius: 50%;
+    opacity: 0.7;
+}
+.flecha:hover {
+    opacity: 1;
+}
+.flecha-izquierda {
+    left: 10px;
+}
+.flecha-derecha {
+    right: 10px;
+}
+
 
 
