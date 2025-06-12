@@ -1,73 +1,107 @@
 <?php
 session_start();
-
-// conectamos esta página a conexion.php para obtener la conexión a la base de datos
+//incluye la conecxion a la base de datos
 require_once '../including/conexion.php';
 
-// Nos aseguramos que el usuario sea un administrador 
-// if (isset($_SESSION ['rol'] || $_SESSION ['rol'] !== 'admin')) {
-//    header('Location: index.php')
-//    exit;
-// }
+//verifica que el usuario sea administrador
+//if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'admin') {
+   // header('Location: ../index.php'); //redirige a la pagina principal
+   //exit(); //fializa la ejecucion del script
+//}
 
-// Si resivimos el id y es valido por el metodo $_GET y obtenmos los datos del producto
-if (isset($_GET['id'])) {
-    $id = (int) $_GET['id']; // Convertimos el id a entero
-    $query = "SELECT * FROM proveedor WHERE id_proveedor = ?";
-    $stmt = $conexion->prepare($query);
-    $stmt->bind_param("i", "id");
-    $stm->exute();
-    $resultado = $stmt->get_result();
-    $producto = $resultado->fetch_assoc();
+//verifica que se haya recibido el id por la URL
+if (!isset($_GET['id'])) {
+    echo "Proveedor no especificado."; //muestra eror si no hay id
+    exit();
 }
 
-// Traemos los datos del formulario 
+$id = (int) $_GET['id']; //convierte el id en un numero entero 
+// variables para mostras mensajes al usuario
+$error = ""; 
+$mensaje = "";
+
+//prepara la consulta para obtener datos actuales del proveedor
+$stmt = $conexion->prepare("SELECT * FROM proveedores WHERE id_proveedor = ?");
+$stmt->bind_param("i", $id); //enlaza el id como parametro entero
+$stmt->execute(); //ejecuta la consulta
+$resultado = $stmt->get_result(); //obtiene el resultado de la consulta
+$proveedor = $resultado->fetch_assoc();//extrae el primer registro de la consulta
+
+//si no se encuentra ningun proveedor con el id especificado, muestra error
+if (!$proveedor) {
+    echo "Proveedor no encontrado.";
+    exit();
+}
+
+// Si se envió el formulario mediente el POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-$nombre = $_POST = ['nombre'];
-$producto= $_POST = ['producto'];
+    // Obtiene los datos del formulario y elimina los espacios en blanco
+    $nombre = trim($_POST['nombre']);
+    $telefono = trim($_POST['telefono']);
+    $direccion = trim($_POST['direccion']);
+
+    if ($nombre && $telefono && $direccion) {
+        $stmt = $conexion->prepare("UPDATE proveedores SET nombre = ?, telefono = ?, direccion = ? WHERE id_proveedor = ?");
+        $stmt->bind_param("sssi", $nombre, $telefono, $direccion, $id);
+
+        if ($stmt->execute()) {
+            $mensaje = "Proveedor actualizado correctamente.";
+            // Actualizar datos en pantalla
+            $proveedor['nombre'] = $nombre;
+            $proveedor['telefono'] = $telefono;
+            $proveedor['direccion'] = $direccion;
+        } else {
+            $error = "Error al actualizar proveedor.";
+        }
+    } else {
+        $error = "Todos los campos son obligatorios.";
+    }
 }
 ?>
 
-<!-- El html del sitio -->
- <!DOCTYPE html>
- <html lang="en">
- <head>
+
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
- </head>
- <body>
+    <title>Modificar Proveedor</title>
+    <link rel="stylesheet" href="../styles/style.css">
+</head>
+<body>
+    <?php include("../including/navbar.php"); ?>
 
-<!-- Main que contiene toda la informacón que mostrara la página a los usuarios -->
- <main class="container proveedores-from">
+    <main class="container">
+        <h2>Modificar Proveedor</h2>
 
-<!-- titulo de la página -->
- <header>
-        <h2>Modificar proveedores</h2>
-    </header>
+        <?php if ($mensaje): ?>
+            <div class="success" style="color: green;"><?php echo htmlspecialchars($mensaje); ?></div>
+        <?php endif; ?>
 
-<!-- Mostramos le error con un alert para que sea inmediato para los lectors -->
- <?php if (isset($error)) : ?>
-    <div class= "error" role="alert" <?php echo htmlspecialchars($error)?>></div>
-    <?php endif; ?>
+        <?php if ($error): ?>
+            <div class="error" style="color: red;"><?php echo htmlspecialchars($error); ?></div>
+        <?php endif; ?>
 
- <!-- Formulario para poder editar los datos del proveedor -->
-  <form method="POST" enctype="multipart/form-data" novalidate> 
-    <label for="nombre">Nombre: </label>
-    <input type="text" id="nombre" name="nombre" value="<?php echo htmlspecialchars($proveedor["nombre"]); ?>" require></input>
-    <labe for="producto">Producto: </label>
-       <input type="text" id="producto" name="productoS" value="<?php echo htmlspecialchars($proveedor["producTo"]); ?>" require></input>
-  </form>
+        <form method="POST">
+            <label for="nombre">Nombre:</label>
+            <input type="text" name="nombre" id="nombre" required value="<?php echo htmlspecialchars($proveedor['nombre']); ?>">
 
+            <label for="telefono">Teléfono:</label>
+            <input type="text" name="telefono" id="telefono" required value="<?php echo htmlspecialchars($proveedor['telefono']); ?>">
 
-        <!-- nav para volver a los proveedores -->
+            <label for="direccion">Dirección:</label>
+            <textarea name="direccion" id="direccion" rows="4" required><?php echo htmlspecialchars($proveedor['direccion']); ?></textarea>
+
+            <button type="submit">Guardar Cambios</button>
+        </form>
+
         <nav>
-            <a href="proveedor.php" class="btn">Volver al listado de Proveedor</a>
+            <a href="listar_proveedores.php" class="btn">Volver a Proveedores</a>
         </nav>
     </main>
-    
+
     <footer>
-        <p>&copy; 2025 Mi Tienda</p>
-         </footer>
+        <p>&copy; 2025 Mi Sistema</p>
+    </footer>
 </body>
 </html>
