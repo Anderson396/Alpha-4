@@ -1,58 +1,65 @@
 <?php
-//iniciamos sesion
 session_start();
+require_once '../including/conexion.php'; // Asegúrate de que esta ruta sea correcta
 
-//Incluimos la conexion a la base de datos
-require_once ".. including/conexion.php";
+// Inicializa variables para el estado y los mensajes
+$error = null;
+$exito = false; // Bandera para indicar si la eliminación fue exitosa
 
-//Solo el administrador podra eliminar productos
-if (!isset($_SESSION["rol"]) || $_SESSION["rol"] !== "admin") {
+// Verifica si se recibió un ID de producto válido a través de GET
+if (isset($_GET['id']) && is_numeric($_GET['id'])) {
+    $id_producto = (int)$_GET['id']; // Convierte a entero por seguridad
 
-       // Si no es administrados, se redirigira a la pagina principal
-    header("Location: ../index.php");
-    exit();
-}
+    // 1. Obtiene el nombre del archivo de imagen de la base de datos antes de eliminar el registro del producto
+    $stmt_select_imagen = $conexion->prepare("SELECT imagen FROM productos WHERE id_producto = ?");
+    if ($stmt_select_imagen) {
+        $stmt_select_imagen->bind_param("i", $id_producto);
+        $stmt_select_imagen->execute();
+        $resultado_imagen = $stmt_select_imagen->get_result();
+        $producto_data = $resultado_imagen->fetch_assoc();
+        $stmt_select_imagen->close(); // Cierra la declaración SELECT
 
-//Verificamos que reciba el ID válido por una URL
-if (isset($_GET["id"])) {
-    $id = (int)$_GET["id"]; // Convierte por seguridad 
+        // Verifica si el producto existe y tiene una imagen
+        if ($producto_data && !empty($producto_data['imagen'])) {
+            $rutaImagen = "../imagenes/" . $producto_data['imagen'];
 
- // Primer paso: Obtiene el nombre de la imagen asociada al productos
-$stmt = $conexion->prepare("SELECT imagen FROM productos WHERE id_producto = ?");
-$stmt->bind_param("i", $id);
-$stmt->execute();
-$resultado = $stmt->get_result();
-$producto = $resultado->fetch_assoc();
+            // 2. Elimina el archivo de imagen del servidor
+            if (file_exists($rutaImagen)) {
+                if (!unlink($rutaImagen)) {
+                    // Esto es una advertencia, no un error fatal para la eliminación del producto
+                    $error = "❌ Advertencia: No se pudo eliminar la imagen del servidor: " . htmlspecialchars($producto_data['imagen']);
+                }
+            } else {
+                // Si la ruta de la imagen estaba en la DB pero el archivo no se encontró en el disco
+                $error = "❌ Advertencia: La imagen " . htmlspecialchars($producto_data['imagen']) . " no se encontró en el servidor.";
+            }
+        }
 
-//Segundo paso: Si el producto tiene imagen que existe en el archivo, lo eliminara del servidor 
-if ($producto && !empty($producto["imagen"])) {
-    $rutaImagen = "../uploads/" . $producto["imagen"];
+        // 3. Elimina el registro del producto de la base de datos
+        $stmt_delete_producto = $conexion->prepare("DELETE FROM productos WHERE id_producto = ?");
+        if ($stmt_delete_producto) {
+            $stmt_delete_producto->bind_param("i", $id_producto);
+            if ($stmt_delete_producto->execute()) {
+                // Verifica si se afectaron filas (es decir, si se eliminó un producto)
+                if ($stmt_delete_producto->affected_rows > 0) {
+                    $exito = true; // Establece la bandera de éxito
+                } else {
+                    $error = "❌ No se encontró ningún producto con ID " . $id_producto . " para eliminar.";
+                }
+            } else {
+                $error = "❌ Error al ejecutar la consulta de eliminación: " . $stmt_delete_producto->error;
+            }
+            $stmt_delete_producto->close(); // Cierra la declaración DELETE
+        } else {
+            $error = "❌ Error al preparar la consulta de eliminación: " . $conexion->error;
+        }
 
-    //Si el archivo es existente, lo eliminara para evitar errores 
-    if (file_exists($rutaImagen)) {
-            unlink($rutaImagen); // eliminara los archivos
+    } else {
+        $error = "❌ Error al obtener la información del producto para eliminar (consulta de imagen): " . $conexion->error;
     }
-}
 
-//Tecer paso: Prepara la consulta para eliminar el prducto de la base de datos 
-    $stmt = $conexion->prepare("DELETE FROM productos WHERE id_producto = ?");
-    $stmt->bind_param("i", $id);
-    $stmt->execute();
-
-    echo "El producto se elimino correctamente.";
- else {
-    echo "No se encontro este producto.";
-}
-// Cuarto paso: Ejecutamos la consulta y validamos el resultado
-if ($stmt->execute()) {
-
-    // Si salió bien, se redirige a la lista de productos
-    header("Location: productos.php");
-    exit();
 } else {
-    $error = "No se puede eliminar este producto.";
-}
-
+    $error = "❌ ID de producto no válido o no proporcionado.";
 }
 ?>
 
@@ -62,42 +69,42 @@ if ($stmt->execute()) {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Eliminar Producto</title>
-    <link rel="stylesheet" href="../styles/style.css" />
-
-<script>
-    // Función que ejecuta al cargar la pagina 
-    window.onload = function () {
-        // Se muestra una alerta antes de iniciar
-        if (!confirm("¿Estás seguro/a que deseas eliminar este producto?")) {
-            //Si el usuario cancela lo llevara de nuevo a la lista de productos
-            window.location.href = "productos.php";
-            }
+    <link rel="stylesheet" href="../styles/style.css" /> <script>
+        // Este script se ejecuta al cargar la página eliminar_productos.php
+        window.onload = function () {
+            // Muestra el cuadro de diálogo de confirmación solo si no se ha realizado ninguna operación (ej. carga inicial
+            // antes de que el script haya procesado el ID de eliminación, o si el ID era inválido).
+            // Esto evita que aparezca después de que la eliminación haya ocurrido y se muestre el mensaje.
+            <?php if (!isset($_GET['id']) || ($error && strpos($error, 'ID de producto no válido') !== false) || (!$exito && !$error)): ?>
+                if (!confirm("¿Estás seguro/a que deseas eliminar este producto?")) {
+                    window.location.href = "productos.php"; // Redirige si se cancela
+                }
+            <?php endif; ?>
         };
-</script>
-
+    </script>
 </head>
 <body>
-    <?php include("../including/navbar.php"); ?>
+    <?php include("../including/navbar.php"); // Asegúrate de que esta ruta sea correcta ?>
 
     <main class="container">
         <header>
             <h1>Eliminar Producto</h1>
         </header>
 
-                <!-- Mensaje de error si existe -->
-        <?php if (isset($error)) : ?>
+        <?php if ($error): ?>
             <section class="error-message" style="color: red;">
                 <p><?php echo htmlspecialchars($error); ?></p>
             </section>
-
-             <?php else: ?>
-            <!-- Confirmación que el producto fue eliminado -->
-            <section class="confirmation-message">
-                <p>El producto se elimino correctamente.</p>
+        <?php elseif ($exito): ?>
+            <section class="confirmation-message" style="color: green;">
+                <p>✅ El producto se eliminó correctamente.</p>
+            </section>
+        <?php else: ?>
+            <section class="info-message" style="color: blue;">
+                <p>Esperando confirmación...</p>
             </section>
         <?php endif; ?>
 
-         <!-- Enlace que regresa a la lista de productos -->
         <nav>
             <a href="productos.php" class="btn">Volver a Productos</a>
         </nav>
