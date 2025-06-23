@@ -6,12 +6,12 @@ session_start();
 require_once '../including/conexion.php';
 
 // Verificamos si el usuraio está registrado y si es administrador
-if (!isset($_SESSION['rol']) || $_SESSION['rol'] != 'admin') {
+//if (!isset($_SESSION['rol']) || $_SESSION['rol'] != 'admin') {
    
    // Y si esto no es así, lo redirigiremos a la página de inicio
-   header("Location: ../index.php");
-   exit; // Terminamos el script despues de redirigir
-}
+ //  header("Location: ../index.php");
+//   exit; // Terminamos el script despues de redirigir
+// }
 
 // Obtenemos los datos del formulario mediante POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -57,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <title>Agregar Producto</title>
-    <link rel="stylesheet" href="../styles/style.css"> <!-- Estilos del sitio -->
+    <link rel="stylesheet" href="../styles/Style2.CSS"> <!-- Estilos del sitio -->
 </head>
 <body>
 
@@ -92,7 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <input type="file" id="imagen" name="imagen" accept="image/*" required>
 
                 <!-- Botón para enviar el formulario -->
-                <button type="submit">Agregar Producto</button>
+                <button type="submit">Agregar Producto</button><br><br>
             </form>
         </section>
        
@@ -104,7 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <!-- Pie de página del sitio -->
     <footer>
-        <p>&copy; 2025 Mi Tienda</p>
+        <h2>&copy; 2025 Mi Tienda</h2>
     </footer>
 </body>
 </html>
