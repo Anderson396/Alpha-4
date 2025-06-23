@@ -1,0 +1,193 @@
+/* General Body Styling (matching image_ad46f1.jpg background) */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+    color: #333; /* Texto general en gris oscuro */
+    min-height: 100vh; /* Asegura que el degradado cubra toda la altura de la ventana */
+    display: flex; /* Para centrar el contenedor verticalmente si se desea */
+    flex-direction: column;
+}
+
+/* Container for the whole page content (matching image_ad46f1.jpg form background) */
+.container {
+    max-width: 500px;
+    margin: 40px auto; /* Centra el contenedor horizontalmente */
+    padding: 30px;
+    background-color: #fff; /* Fondo blanco para el formulario */
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2); /* Sombra más pronunciada para el efecto flotante */
+    flex-grow: 1; /* Permite que el contenedor ocupe el espacio disponible */
+}
+
+/* Header styling */
+header h1 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 30px;
+    font-size: 2.5em;
+    padding-bottom: 10px; /* Un poco de espacio debajo del título */
+    border-bottom: 1px solid #eee; /* Línea sutil debajo del título */
+}
+
+/* Form Group Styling */
+.form-group {
+    margin-bottom: 20px; /* Mayor espacio entre grupos de formulario */
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px; /* Más espacio entre label y input */
+    font-weight: bold;
+    color: #555; /* Color de texto ligeramente más claro para los labels */
+    font-size: 1.1em; /* Un poco más grande */
+}
+
+.form-group input[type="text"],
+.form-group input[type="number"],
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 12px; /* Mayor padding para un aspecto más amplio */
+    border: 1px solid #ddd; /* Borde más claro */
+    border-radius: 6px; /* Esquinas más redondeadas */
+    box-sizing: border-box;
+    font-size: 1em; /* Tamaño de fuente estándar */
+    transition: border-color 0.3s ease, box-shadow 0.3s ease; /* Transiciones suaves al enfocar */
+}
+
+.form-group input[type="text"]:focus,
+.form-group input[type="number"]:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    border-color: #6a1b9a; /* Borde morado al enfocar */
+    box-shadow: 0 0 8px rgba(106, 27, 154, 0.2); /* Sombra al enfocar */
+    outline: none; /* Elimina el contorno predeterminado del navegador */
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 100px; /* Altura mínima un poco mayor */
+}
+
+/* Styles for the file input (image upload) */
+.form-group input[type="file"] {
+    width: 100%;
+    padding: 10px 0; /* Un poco más de padding vertical */
+    border: none;
+    background-color: transparent;
+}
+
+/* Image Preview Styling */
+.form-group img {
+    max-width: 180px; /* Tamaño máximo ligeramente mayor para la imagen actual */
+    height: auto;
+    display: block;
+    margin: 15px 0 0; /* Espacio superior para separar del input file */
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15); /* Sombra más visible */
+}
+
+/* Styles for messages (error and success) */
+.error-message {
+    background-color: #ffebee; /* Rojo claro suave */
+    color: #c62828; /* Rojo oscuro fuerte */
+    border: 1px solid #ef9a9a; /* Borde rojo */
+    padding: 15px 25px;
+    margin-bottom: 25px;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+.success-message {
+    background-color: #e8f5e9; /* Verde claro suave */
+    color: #2e7d32; /* Verde oscuro fuerte */
+    border: 1px solid #a5d6a7; /* Borde verde */
+    padding: 15px 25px;
+    margin-bottom: 25px;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+/* Button Styling (matching image_ad46f1.jpg button color) */
+.btn {
+    display: block; /* Para que ocupe todo el ancho disponible */
+    width: 100%; /* Ocupa el 100% del ancho del contenedor */
+    padding: 15px; /* Mayor padding para un botón más grande */
+    background-color: #4CAF50; /* Verde brillante */
+    color: white;
+    text-decoration: none;
+    border-radius: 8px; /* Esquinas más redondeadas */
+    border: none;
+    cursor: pointer;
+    font-size: 1.2em; /* Texto más grande */
+    font-weight: bold; /* Negrita */
+    transition: background-color 0.3s ease, transform 0.2s ease; /* Transiciones suaves */
+    margin-top: 25px; /* Espacio superior */
+}
+
+.btn:hover {
+    background-color: #388E3C; /* Verde más oscuro al pasar el ratón */
+    transform: translateY(-2px); /* Pequeño efecto de elevación */
+}
+
+.btn:active {
+    transform: translateY(0); /* Vuelve a su posición al hacer clic */
+}
+
+/* Specific styling for the "Volver a Productos" button's container */
+nav {
+    text-align: center;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #eee; /* Una línea divisoria sutil */
+}
+
+nav .btn {
+    width: auto; /* Permite que el botón de volver tenga ancho automático y no 100% */
+    display: inline-block; /* Para que no ocupe todo el ancho */
+    padding: 10px 20px; /* Padding más pequeño para el botón de volver */
+    background-color: #673AB7; /* Un tono de morado para el botón de volver */
+}
+
+nav .btn:hover {
+    background-color: #512DA8; /* Morado más oscuro al pasar el ratón */
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .container {
+        margin: 20px;
+        padding: 20px;
+    }
+
+    header h1 {
+        font-size: 2em;
+    }
+
+    .btn {
+        font-size: 1.1em;
+        padding: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        margin: 15px;
+        padding: 15px;
+    }
+
+    header h1 {
+        font-size: 1.8em;
+    }
+
+    .form-group label {
+        font-size: 1em;
+    }
+}
