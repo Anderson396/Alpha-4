@@ -56,7 +56,7 @@ $carrito = isset($_SESSION['carrito']) ? $_SESSION['carrito'] : [];
     <?php endif; ?>
 
     <nav>
-        <a href="detalle_producto.php" class="btn">Seguir Comprando</a>
+        <a href="../index.php" class="btn">Seguir Comprando</a>
     </nav>
 </main>
 
@@ -65,4 +65,3 @@ $carrito = isset($_SESSION['carrito']) ? $_SESSION['carrito'] : [];
 </footer>
 </body>
 </html>
-
