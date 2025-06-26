@@ -3,100 +3,404 @@
 session_start();
 
 // Conectamos a la base de datos
+// Asegúrate de que la ruta a 'conexion.php' sea correcta según tu estructura de archivos.
+// Por ejemplo, si 'carrito.php' está en 'tu_proyecto/carrito/' y 'conexion.php' está en 'tu_proyecto/including/',
+// entonces la ruta '../including/conexion.php' es la correcta.
 require_once '../including/conexion.php';
 
-// Verificamos si el usuario está registrado y si es administrador
-// if (!isset($_SESSION['rol']) || $_SESSION['rol'] != 'admin') {
-//    // Y si esto no es así, lo redirigiremos a la página de inicio
-//    header("Location: ../index.php");
-//    exit; // Terminamos el script después de redirigir
-// }
+// Inicializar el carrito si no existe en la sesión
+if (!isset($_SESSION['carrito'])) {
+    $_SESSION['carrito'] = [];
+}
 
-// Obtenemos los datos del formulario mediante POST
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Tomamos los datos enviados del formulario
-    $nombre = $_POST['nombre'];
-    $descripcion = $_POST['descripcion']; // <-- Corrected line
-    $precio = $_POST['precio'];
-    $stock = $_POST['stock'];
+// Mensaje de estado para el usuario
+$status_message = '';
 
-    // Obtener la imagen cargada por el usuario
-    $imagen_nombre = $_FILES['imagen']['name'];
-    $imagen_tmp = $_FILES['imagen']['tmp_name'];
-    $ruta_destino = '../imagenes/' . basename($imagen_nombre);
+// --- Lógica para agregar, actualizar y eliminar productos del carrito ---
 
-    // Mueve la imagen desde su ubicación a la carpeta destino
-    if (move_uploaded_file($imagen_tmp, $ruta_destino)) {
+// Si se recibe una acción de agregar al carrito
+if (isset($_POST['action']) && $_POST['action'] === 'add_to_cart' && isset($_POST['id_producto'])) {
+    $id_producto = (int)$_POST['id_producto'];
+    // La cantidad por defecto es 1 si no se especifica, o la cantidad enviada desde el formulario
+    $cantidad_a_agregar = isset($_POST['cantidad']) ? (int)$_POST['cantidad'] : 1;
 
-        // Si la imagen subió correctamente, se inserta el producto en la base de datos
-        $query = "INSERT INTO productos (nombre, descripcion, precio, imagen, stock) VALUES (?, ?, ?, ?, ?)";
-        $stmt = $conexion->prepare($query);
+    // Validar que la cantidad sea al menos 1 para agregar
+    if ($cantidad_a_agregar <= 0) {
+        $cantidad_a_agregar = 1; // Si envían 0 o negativo, lo ajustamos a 1
+    }
 
-        // Asocia los valores con los placeholders (?)
-        $stmt->bind_param("ssdsi", $nombre, $descripcion, $precio, $imagen_nombre, $stock);
+    // Obtener información del producto desde la base de datos para asegurar stock y precio actual
+    $stmt = $conexion->prepare("SELECT nombre, precio, imagen, stock FROM productos WHERE id_producto = ?");
 
-        // Ejecuta y verifica si se insertó correctamente
-        if ($stmt->execute()) {
-            // Redirige a la lista de productos
-            header("Location: productos.php");
-            exit();
+    // Verificar si la preparación de la consulta falló
+    if ($stmt === false) {
+        error_log('Error al preparar la consulta SELECT en carrito.php: ' . $conexion->error);
+        $status_message = '<p class="error-message">❌ Error interno del servidor al buscar producto.</p>';
+        header('Location: carrito.php?status_message=' . urlencode($status_message));
+        exit();
+    }
+
+    $stmt->bind_param("i", $id_producto);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows > 0) {
+        $producto_db = $result->fetch_assoc();
+        $stock_disponible = $producto_db['stock'];
+        $nombre_db = htmlspecialchars($producto_db['nombre']);
+        $precio_db = (float)$producto_db['precio'];
+        $imagen_db = htmlspecialchars($producto_db['imagen']);
+
+        // Calcular la cantidad actual en el carrito para este producto
+        $cantidad_en_carrito = isset($_SESSION['carrito'][$id_producto]) ? $_SESSION['carrito'][$id_producto]['cantidad'] : 0;
+        $nueva_cantidad_total = $cantidad_en_carrito + $cantidad_a_agregar;
+
+        // Verificar si hay suficiente stock para la cantidad total deseada
+        if ($nueva_cantidad_total <= $stock_disponible) {
+            $_SESSION['carrito'][$id_producto] = [
+                'nombre' => $nombre_db,
+                'precio' => $precio_db,
+                'cantidad' => $nueva_cantidad_total,
+                'imagen' => $imagen_db
+            ];
+            $status_message = '<p class="success-message">✔️ Producto añadido al carrito.</p>';
         } else {
-            // Error al guardar en la base de datos
-            $error = "Error al agregar el producto: " . $stmt->error;
+            // Si la cantidad a agregar excede el stock, ajustamos al máximo disponible
+            // y si ya hay en el carrito, se ajusta para no sobrepasar el stock.
+            // Opcional: Podrías simplemente no añadir si excede, pero ajustar es más amigable.
+            if ($cantidad_en_carrito < $stock_disponible) {
+                 $_SESSION['carrito'][$id_producto] = [
+                    'nombre' => $nombre_db,
+                    'precio' => $precio_db,
+                    'cantidad' => $stock_disponible, // Ajusta la cantidad al stock máximo disponible
+                    'imagen' => $imagen_db
+                ];
+                $status_message = '<p class="warning-message">⚠️ Solo se pudo añadir hasta el stock disponible de "' . $nombre_db . '". Cantidad ajustada a ' . $stock_disponible . '.</p>';
+            } else {
+                 $status_message = '<p class="error-message">❌ No hay suficiente stock de "' . $nombre_db . '". Stock disponible: ' . $stock_disponible . '. Ya tienes ' . $cantidad_en_carrito . ' en el carrito.</p>';
+            }
         }
     } else {
-        // Error al subir la imagen
-        $error = "Error al subir la imagen.";
+        $status_message = '<p class="error-message">❌ El producto no existe o fue eliminado.</p>';
     }
+    $stmt->close();
+    // Redirigir para evitar reenvío del formulario al refrescar la página
+    header('Location: carrito.php?status_message=' . urlencode($status_message));
+    exit();
 }
-?>
 
+// Si se recibe una acción de actualizar cantidad desde el propio carrito
+if (isset($_POST['action']) && $_POST['action'] === 'update_quantity' && isset($_POST['id_producto']) && isset($_POST['cantidad'])) {
+    $id_producto = (int)$_POST['id_producto'];
+    $nueva_cantidad = (int)$_POST['cantidad'];
+
+    // Validar que la nueva cantidad sea al menos 0 (0 significa eliminar)
+    if ($nueva_cantidad < 0) {
+        $nueva_cantidad = 0;
+    }
+
+    if (isset($_SESSION['carrito'][$id_producto])) {
+        // Obtener stock actual del producto desde la base de datos
+        $stmt = $conexion->prepare("SELECT nombre, stock FROM productos WHERE id_producto = ?");
+        if ($stmt === false) {
+            error_log('Error al preparar la consulta UPDATE SELECT en carrito.php: ' . $conexion->error);
+            $status_message = '<p class="error-message">❌ Error interno del servidor al verificar stock.</p>';
+            header('Location: carrito.php?status_message=' . urlencode($status_message));
+            exit();
+        }
+
+        $stmt->bind_param("i", $id_producto);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows > 0) {
+            $producto_db = $result->fetch_assoc();
+            $stock_disponible = $producto_db['stock'];
+            $nombre_db = htmlspecialchars($producto_db['nombre']);
+
+            if ($nueva_cantidad > 0) {
+                // Verificar si la nueva cantidad excede el stock disponible
+                if ($nueva_cantidad <= $stock_disponible) {
+                    $_SESSION['carrito'][$id_producto]['cantidad'] = $nueva_cantidad;
+                    $status_message = '<p class="success-message">✔️ Cantidad de "' . $nombre_db . '" actualizada.</p>';
+                } else {
+                    // Si la cantidad solicitada excede el stock, ajustarla al stock máximo
+                    $_SESSION['carrito'][$id_producto]['cantidad'] = $stock_disponible;
+                    $status_message = '<p class="warning-message">⚠️ Solo hay ' . $stock_disponible . ' unidades de "' . $nombre_db . '" disponibles. Cantidad ajustada.</p>';
+                }
+            } else {
+                // Si la cantidad es 0, eliminar el producto del carrito
+                unset($_SESSION['carrito'][$id_producto]);
+                $status_message = '<p class="success-message">✔️ Producto "' . $nombre_db . '" eliminado del carrito.</p>';
+            }
+        } else {
+            // Si el producto ya no existe en la base de datos, eliminarlo del carrito
+            unset($_SESSION['carrito'][$id_producto]);
+            $status_message = '<p class="error-message">❌ El producto ya no está disponible y fue eliminado del carrito.</p>';
+        }
+        $stmt->close();
+    } else {
+        $status_message = '<p class="error-message">❌ El producto no se encontró en tu carrito.</p>';
+    }
+    // Redirigir para evitar reenvío del formulario al refrescar la página
+    header('Location: carrito.php?status_message=' . urlencode($status_message));
+    exit();
+}
+
+// Si se recibe una acción de eliminar producto (usando GET para un enlace simple)
+if (isset($_GET['action']) && $_GET['action'] === 'remove_item' && isset($_GET['id_producto'])) {
+    $id_producto = (int)$_GET['id_producto'];
+    if (isset($_SESSION['carrito'][$id_producto])) {
+        $nombre_producto_eliminado = $_SESSION['carrito'][$id_producto]['nombre'];
+        unset($_SESSION['carrito'][$id_producto]);
+        $status_message = '<p class="success-message">✔️ Producto "' . htmlspecialchars($nombre_producto_eliminado) . '" eliminado del carrito.</p>';
+    } else {
+        $status_message = '<p class="error-message">❌ El producto no se encontró en tu carrito para eliminar.</p>';
+    }
+    // Redirigir para evitar reenvío al refrescar
+    header('Location: carrito.php?status_message=' . urlencode($status_message));
+    exit();
+}
+
+// Obtener mensaje de estado si viene de una redirección (para mostrarlo después de las operaciones)
+if (isset($_GET['status_message'])) {
+    $status_message = urldecode($_GET['status_message']);
+}
+
+// --- Calcular el total del carrito para mostrarlo en la página ---
+$total_carrito = 0;
+foreach ($_SESSION['carrito'] as $item) {
+    $total_carrito += $item['precio'] * $item['cantidad'];
+}
+
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Agregar Producto</title>
-    <link rel="stylesheet" href="../styles/Style2.CSS"> </head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Carrito de Compras</title>
+    <link rel="stylesheet" href="../styles/Styles3.CSS" />
+    <style>
+        /* Estilos específicos para el carrito si no están en Styles3.CSS */
+        .cart-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #fff;
+        }
+        .cart-item img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            margin-right: 15px;
+            border-radius: 3px;
+        }
+        .cart-item-details {
+            flex-grow: 1;
+        }
+        .cart-item-details h3 {
+            margin: 0 0 5px 0;
+            font-size: 1.2em;
+            color: #333;
+        }
+        .cart-item-details p {
+            margin: 0;
+            color: #555;
+            font-size: 0.9em;
+        }
+        .cart-item-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .cart-item-actions input[type="number"] {
+            width: 60px;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            text-align: center;
+            -moz-appearance: textfield; /* Para Firefox */
+        }
+        /* Ocultar flechas en input number para Chrome/Safari/Edge */
+        .cart-item-actions input[type="number"]::-webkit-outer-spin-button,
+        .cart-item-actions input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .cart-total {
+            text-align: right;
+            margin-top: 30px;
+            font-size: 1.5em;
+            font-weight: bold;
+            padding-top: 15px;
+            border-top: 2px solid #eee;
+        }
+        .checkout-btn {
+            display: block;
+            width: fit-content;
+            margin: 20px 0 0 auto;
+            padding: 12px 25px;
+            background-color: #28a745; /* Color verde */
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 1.1em;
+            transition: background-color 0.3s ease;
+        }
+        .checkout-btn:hover {
+            background-color: #218838;
+        }
+        .empty-cart-message {
+            text-align: center;
+            padding: 30px;
+            color: #777;
+            font-size: 1.1em;
+            border: 1px dashed #ccc;
+            border-radius: 8px;
+            margin-top: 30px;
+            background-color: #f9f9f9;
+        }
+        .btn.delete {
+            background-color: #dc3545; /* Color rojo para eliminar */
+            color: white;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 0.9em;
+            transition: background-color 0.3s ease;
+        }
+        .btn.delete:hover {
+            background-color: #c82333;
+        }
+        /* Mensajes de estado */
+        .status-message-container {
+            margin-bottom: 20px;
+        }
+        .success-message {
+            color: #155724;
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid transparent;
+            border-radius: .25rem;
+        }
+        .error-message {
+            color: #721c24;
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid transparent;
+            border-radius: .25rem;
+        }
+        .warning-message {
+            color: #856404;
+            background-color: #fff3cd;
+            border-color: #ffeeba;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid transparent;
+            border-radius: .25rem;
+        }
+        .container {
+            max-width: 960px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f8f8f8;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        header, footer {
+            text-align: center;
+            padding: 15px 0;
+            background-color: #333;
+            color: white;
+            margin-bottom: 20px;
+        }
+        header h1, footer p {
+            margin: 0;
+        }
+    </style>
+</head>
 <body>
 
-    <main class="container producto-form">
-        <header>
-            <h2>Agregar Producto</h2>
-        </header>
-        <?php if (isset($error)) : ?>
-            <section class="error">
-                <p><?php echo htmlspecialchars($error); ?></p>
-            </section>
+<header>
+    <?php include('../including/navbar.php'); ?>
+</header>
+
+<main class="container">
+    <section aria-labelledby="cart-title">
+        <h1 id="cart-title">Tu Carrito de Compras</h1>
+
+        <?php if ($status_message): ?>
+            <div class="status-message-container">
+                <?php echo $status_message; ?>
+            </div>
         <?php endif; ?>
 
-        <section>
-            <form method="POST" action="" enctype="multipart/form-data">
-                <label for="nombre">Nombre:</label>
-                <input type="text" id="nombre" name="nombre" required>
+        <?php if (empty($_SESSION['carrito'])): ?>
+            <p class="empty-cart-message">Tu carrito está vacío.</p>
+            <nav aria-label="Volver a la tienda" style="text-align: center; margin-top: 20px;">
+                <a href="../index.php" class="btn checkout-btn">Volver a la tienda</a>
+            </nav>
+        <?php else: ?>
+            <article>
+                <?php foreach ($_SESSION['carrito'] as $id_producto => $item): ?>
+                    <div class="cart-item">
+                        <?php if (!empty($item['imagen'])): ?>
+                            <img src="../imagenes/<?php echo htmlspecialchars($item['imagen']); ?>"
+                                alt="Imagen del producto <?php echo htmlspecialchars($item['nombre']); ?>" />
+                        <?php else: ?>
+                            <img src="../imagenes/placeholder.png" alt="Sin imagen" />
+                        <?php endif; ?>
+                        <div class="cart-item-details">
+                            <h3><?php echo htmlspecialchars($item['nombre']); ?></h3>
+                            <p>Precio Unitario: $<?php echo number_format($item['precio'], 2); ?></p>
+                            <p>Subtotal: $<?php echo number_format($item['precio'] * $item['cantidad'], 2); ?></p>
+                        </div>
+                        <div class="cart-item-actions">
+                            <form action="carrito.php" method="post">
+                                <input type="hidden" name="action" value="update_quantity">
+                                <input type="hidden" name="id_producto" value="<?php echo (int)$id_producto; ?>">
+                                <label for="quantity-<?php echo (int)$id_producto; ?>" class="sr-only">Cantidad:</label>
+                                <input type="number"
+                                    id="quantity-<?php echo (int)$id_producto; ?>"
+                                    name="cantidad"
+                                    value="<?php echo (int)$item['cantidad']; ?>"
+                                    min="0"
+                                    onchange="this.form.submit()" /> </form>
+                            <a class="btn delete" href="carrito.php?action=remove_item&id_producto=<?php echo (int)$id_producto; ?>"
+                               onclick="return confirm('¿Estás seguro de que deseas eliminar este producto del carrito?');"
+                               role="button" aria-label="Eliminar <?php echo htmlspecialchars($item['nombre']); ?> del carrito">Eliminar</a>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
 
-                <label for="descripcion">Descripción:</label>
-                <textarea id="descripcion" name="descripcion" rows="4" required></textarea>
+                <div class="cart-total">
+                    Total: $<?php echo number_format($total_carrito, 2); ?>
+                </div>
 
-                <label for="precio">Precio:</label>
-                <input type="number" id="precio" name="precio" step="0.01" required>
+                <nav aria-label="Acciones del carrito">
+                    <a href="#" class="btn checkout-btn">Proceder al pago</a>
+                    <a href="../admin/productos.php" class="btn checkout-btn" style="background-color: #6c757d; margin-left: 10px;">Continuar Comprando</a>
+                </nav>
+            </article>
+        <?php endif; ?>
 
-                <label for="stock">Stock:</label>
-                <input type="number" id="stock" name="stock" min="0" required>
+    </section>
+</main>
 
-                <label for="imagen">Imagen:</label>
-                <input type="file" id="imagen" name="imagen" accept="image/*" required>
+<footer>
+    <p>&copy; 2025 Mi Tienda</p>
+</footer>
 
-                <button type="submit">Agregar Producto</button><br><br>
-            </form>
-        </section>
-
-        <nav>
-            <a href="productos.php" class="btn">Volver a Productos</a>
-        </nav>
-    </main>
-
-    <footer>
-        <h2>&copy; 2025 Mi Tienda</h2>
-    </footer>
 </body>
 </html>
