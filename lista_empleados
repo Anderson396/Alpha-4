@@ -1,0 +1,61 @@
+<?php
+session_start();
+require_once '../including/conexion.php'; // Asegúrate que este archivo conecta correctamente a tu base de datos
+
+// Consulta SQL para obtener los empleados
+$query = "SELECT id_empleado, nombre, cargo, telefono, correo FROM empleados";
+$resultado = $conexion->query($query);
+?>
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Lista de Empleados</title>
+    <link rel="stylesheet" href="../styles/Style6.CSS"> <!-- Estilo opcional -->
+</head>
+<body>
+
+<?php include("../including/navbar.php"); ?>
+
+<main class="container">
+    <h1>Lista de Empleados</h1>
+
+    <table border="1" cellpadding="10">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Cargo</th>
+                <th>Teléfono</th>
+                <th>Correo</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php if ($resultado && $resultado->num_rows > 0): ?>
+                <?php while ($empleado = $resultado->fetch_assoc()): ?>
+                    <tr>
+                        <td><?php echo htmlspecialchars($empleado['id_empleado']); ?></td>
+                        <td><?php echo htmlspecialchars($empleado['nombre']); ?></td>
+                        <td><?php echo htmlspecialchars($empleado['cargo']); ?></td>
+                        <td><?php echo htmlspecialchars($empleado['telefono']); ?></td>
+                        <td><?php echo htmlspecialchars($empleado['correo']); ?></td>
+                        <td>
+                            <a href="editar_empleado.php?id=<?php echo $empleado['id_empleado']; ?>" class="btn">Editar</a>
+                            <a href="eliminar_empleado.php?id=<?php echo $empleado['id_empleado']; ?>" class="btn delete" onclick="return confirm('¿Estás seguro que deseas eliminar este empleado?');">Eliminar</a>
+                        </td>
+                    </tr>
+                <?php endwhile; ?>
+            <?php else: ?>
+                <tr><td colspan="6">No hay empleados registrados.</td></tr>
+            <?php endif; ?>
+        </tbody>
+    </table>
+
+    <br>
+    <a href="agregar_empleados.php" class="btn">Agregar Empleado</a>
+</main>
+
+</body>
+</html>
