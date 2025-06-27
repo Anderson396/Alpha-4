@@ -1,0 +1,82 @@
+<?php
+session_start();
+require_once '../including/conexion.php'; // Asegúrate de que la ruta sea correcta
+
+$error = null;
+$exito = false;
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $nombre   = trim($_POST['nombre']);
+    $cargo    = trim($_POST['cargo']);
+    $telefono = trim($_POST['telefono']);
+    $correo   = trim($_POST['correo']);
+
+    // Validaciones básicas
+    if (empty($nombre) || empty($cargo) || empty($telefono) || empty($correo)) {
+        $error = "❌ Todos los campos son obligatorios.";
+    } elseif (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+        $error = "❌ El correo electrónico no es válido.";
+    } else {
+        // Inserción en base de datos
+        $stmt = $conexion->prepare("INSERT INTO empleados (nombre, cargo, telefono, correo) VALUES (?, ?, ?, ?)");
+        if ($stmt) {
+            $stmt->bind_param("ssss", $nombre, $cargo, $telefono, $correo);
+            if ($stmt->execute()) {
+                $exito = true;
+                header('Location: lista_empleados.php');
+                exit();
+            } else {
+                $error = "❌ Error al guardar el empleado: " . $stmt->error;
+            }
+            $stmt->close();
+        } else {
+            $error = "❌ Error al preparar la consulta: " . $conexion->error;
+        }
+    }
+}
+?>
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Agregar Empleado</title>
+    <link rel="stylesheet" href="../styles/Style7.css">
+</head>
+<body>
+
+<main class="container">
+    <h1>Agregar Empleado</h1>
+
+    <?php if ($error): ?>
+        <p style="color: red;"><?php echo htmlspecialchars($error); ?></p>
+    <?php endif; ?>
+
+    <form action="agregar_empleados.php" method="POST">
+        <div class="form-group">
+            <label for="nombre">Nombre completo:</label>
+            <input type="text" id="nombre" name="nombre" required>
+        </div>
+
+        <div class="form-group">
+            <label for="cargo">Cargo:</label>
+            <input type="text" id="cargo" name="cargo" required>
+        </div>
+
+        <div class="form-group">
+            <label for="telefono">Teléfono:</label>
+            <input type="text" id="telefono" name="telefono" required>
+        </div>
+
+        <div class="form-group">
+            <label for="correo">Correo:</label>
+            <input type="email" id="correo" name="correo" required>
+        </div>
+
+        <button type="submit" class="btn">Guardar Empleado</button>
+        <a href="../admin/lista_empleados.php" class="btn">Volver a lista</a>
+    </form>
+</main>
+
+</body>
+</html>
