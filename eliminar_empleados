@@ -1,0 +1,33 @@
+<?php
+session_start();
+require_once '../including/conexion.php';
+
+// Verifica si se recibió un ID válido por GET
+if (isset($_GET['id']) && is_numeric($_GET['id'])) {
+    $id_empleado = intval($_GET['id']);
+
+    // Prepara la consulta SQL para eliminar
+    $query = "DELETE FROM empleados WHERE id_empleado = ?";
+    $stmt = $conexion->prepare($query);
+    $stmt->bind_param("i", $id_a_eliminar);
+    $stmt->execute();
+
+    if ($stmt) {
+        $stmt->bind_param("i", $id_empleado);
+
+        if ($stmt->execute()) {
+            // Redirige a la lista con mensaje de éxito
+            header("Location: lista_empleados.php?status=deleted");
+            exit();
+        } else {
+            echo "<p style='color:red;'>Error al ejecutar la eliminación: " . $stmt->error . "</p>";
+        }
+        $stmt->close();
+    } else {
+        echo "<p style='color:red;'>Error al preparar la consulta: " . $conexion->error . "</p>";
+    }
+} else {
+    echo "<p style='color:red;'>ID no válido para eliminar.</p>";
+}
+
+?>
