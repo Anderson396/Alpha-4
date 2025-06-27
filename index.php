@@ -11,8 +11,10 @@ $result = mysqli_query($conexion, $query); // Ejecuta la consulta
 ?>
 
 <main class="container">
-    <h1>BIENVENIDOS A NUESTRA TIENDA VIRTUAL DE "DULCES CREACIONES"</h1>
-    <link rel="stylesheet" href="/pagina_pasteleria/styles/styles.css" />
+    <h1>BIENVENIDOS A NUESTRA TIENDA VIRTUAL DE "DULCES CREACIONES"
+         <img src="imagenes/logo.jpg.jpg" style="height: 40px; vertical-align: middle;">
+</h1>
+    <link rel="stylesheet" href="styles/styles.css"/>
 
     <!-- Sección para mostrar todos los productos -->
     <section class="productos">
