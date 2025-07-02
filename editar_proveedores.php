@@ -1,107 +1,223 @@
 <?php
 session_start();
-//incluye la conecxion a la base de datos
-require_once '../including/conexion.php';
+require_once '../including/conexion.php'; // Incluye tu archivo de conexión a la base de datos
 
-//verifica que el usuario sea administrador
-//if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'admin') {
-   // header('Location: ../index.php'); //redirige a la pagina principal
-   //exit(); //fializa la ejecucion del script
-//}
-
-//verifica que se haya recibido el id por la URL
-if (!isset($_GET['id'])) {
-    echo "Proveedor no especificado."; //muestra eror si no hay id
+// Verificar si la conexión a la base de datos es válida
+if (!$conexion) {
+    $_SESSION['error'] = "Error de conexión a la base de datos.";
+    header("Location: listar_proveedores.php");
     exit();
 }
 
-$id = (int) $_GET['id']; //convierte el id en un numero entero 
-// variables para mostras mensajes al usuario
-$error = ""; 
-$mensaje = "";
+// Inicializar variables para el formulario
+$id_proveedor = null;
+$nombre = '';
+$producto = '';
+$telefono = '';
+$form_error = ''; // Para almacenar errores del formulario
 
-//prepara la consulta para obtener datos actuales del proveedor
-$stmt = $conexion->prepare("SELECT * FROM proveedores WHERE id_proveedor = ?");
-$stmt->bind_param("i", $id); //enlaza el id como parametro entero
-$stmt->execute(); //ejecuta la consulta
-$resultado = $stmt->get_result(); //obtiene el resultado de la consulta
-$proveedor = $resultado->fetch_assoc();//extrae el primer registro de la consulta
+// 1. Lógica para obtener los datos del proveedor (cuando la página se carga por primera vez)
+if (isset($_GET['id'])) {
+    $id_proveedor = $_GET['id'];
 
-//si no se encuentra ningun proveedor con el id especificado, muestra error
-if (!$proveedor) {
-    echo "Proveedor no encontrado.";
-    exit();
-}
+    // Prepara la consulta para seleccionar los datos del proveedor
+    $stmt = $conexion->prepare("SELECT id_proveedor, nombre, producto, telefono FROM proveedores WHERE id_proveedor = ?");
 
-// Si se envió el formulario mediente el POST
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Obtiene los datos del formulario y elimina los espacios en blanco
-    $nombre = trim($_POST['nombre']);
-    $telefono = trim($_POST['telefono']);
-    $direccion = trim($_POST['direccion']);
+    if ($stmt === false) {
+        $_SESSION['error'] = "Error al preparar la consulta de selección: " . $conexion->error;
+        header("Location: listar_proveedores.php");
+        exit();
+    }
 
-    if ($nombre && $telefono && $direccion) {
-        $stmt = $conexion->prepare("UPDATE proveedores SET nombre = ?, telefono = ?, direccion = ? WHERE id_proveedor = ?");
-        $stmt->bind_param("sssi", $nombre, $telefono, $direccion, $id);
+    $stmt->bind_param("i", $id_proveedor); // 'i' porque id_proveedor es entero
+    $stmt->execute();
+    $resultado = $stmt->get_result();
 
-        if ($stmt->execute()) {
-            $mensaje = "Proveedor actualizado correctamente.";
-            // Actualizar datos en pantalla
-            $proveedor['nombre'] = $nombre;
-            $proveedor['telefono'] = $telefono;
-            $proveedor['direccion'] = $direccion;
-        } else {
-            $error = "Error al actualizar proveedor.";
-        }
+    if ($resultado->num_rows === 1) {
+        $proveedor = $resultado->fetch_assoc();
+        $nombre = $proveedor['nombre'];
+        $producto = $proveedor['producto'];
+        $telefono = $proveedor['telefono'];
     } else {
-        $error = "Todos los campos son obligatorios.";
+        $_SESSION['error'] = "Proveedor no encontrado.";
+        header("Location: listar_proveedores.php");
+        exit();
+    }
+    $stmt->close();
+} elseif ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    // Si no hay ID en la URL y no es un envío de formulario, es un acceso inválido
+    $_SESSION['error'] = "No se especificó ningún proveedor para editar.";
+    header("Location: listar_proveedores.php");
+    exit();
+}
+
+
+// 2. Lógica para procesar el envío del formulario (cuando el usuario guarda los cambios)
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Recoger y sanear los datos del formulario, incluyendo el ID oculto
+    $id_proveedor = trim($_POST['id_proveedor'] ?? '');
+    $nombre = trim($_POST['nombre'] ?? '');
+    $producto = trim($_POST['producto'] ?? '');
+    $telefono = trim($_POST['telefono'] ?? '');
+
+    // Validar los datos
+    if (empty($id_proveedor) || !is_numeric($id_proveedor)) {
+        $form_error = 'ID de proveedor inválido.';
+    } elseif (empty($nombre)) {
+        $form_error = 'El nombre del proveedor es obligatorio.';
+    } elseif (empty($producto)) {
+        $form_error = 'El producto principal es obligatorio.';
+    } elseif (empty($telefono)) {
+        $form_error = 'El número de teléfono es obligatorio.';
+    }
+    // Puedes añadir más validaciones aquí
+
+    // Si no hay errores de validación, intentar actualizar en la base de datos
+    if (empty($form_error)) {
+        // Prepara la consulta SQL para actualizar el proveedor
+        // ASEGÚRATE DE QUE LOS NOMBRES DE LAS COLUMNAS coincidan con tu DB
+        $stmt = $conexion->prepare("UPDATE proveedores SET nombre = ?, producto = ?, telefono = ? WHERE id_proveedor = ?");
+
+        if ($stmt === false) {
+            $form_error = "Error al preparar la consulta de actualización: " . $conexion->error;
+        } else {
+            // Vincula los parámetros
+            // 'sssi' indica 3 strings y 1 entero
+            $stmt->bind_param("sssi", $nombre, $producto, $telefono, $id_proveedor);
+
+            // Ejecuta la consulta
+            if ($stmt->execute()) {
+                $_SESSION['message'] = "Proveedor '" . htmlspecialchars($nombre) . "' actualizado exitosamente.";
+                header("Location: listar_proveedores.php"); // Redirige de vuelta a la lista
+                exit();
+            } else {
+                $form_error = "Error al actualizar el proveedor: " . $stmt->error;
+            }
+            $stmt->close();
+        }
     }
 }
+// La conexión se cierra al final del script si no hay redirección
+// $conexion->close();
 ?>
-
-
 
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Modificar Proveedor</title>
-    <link rel="stylesheet" href="../styles/style.css">
+    <title>Editar Proveedor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Savate&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles/Style4.css">
+    <style>
+        /* Estilos específicos para el formulario de editar */
+        .form-container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            margin: 30px auto;
+        }
+        .form-container h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 25px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        .form-group input[type="text"] {
+            width: calc(100% - 20px);
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        .form-group input[type="text"]:focus {
+            border-color: #007bff;
+            outline: none;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.25);
+        }
+        .btn-submit {
+            background-color: #007bff; /* Azul para guardar cambios */
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            width: 100%;
+            transition: background-color 0.3s ease;
+        }
+        .btn-submit:hover {
+            background-color: #0056b3; /* Azul más oscuro al pasar el ratón */
+        }
+        .btn-back {
+            display: block;
+            width: calc(100% - 40px);
+            text-align: center;
+            padding: 10px 20px;
+            margin-top: 15px;
+            background-color: #6c757d; /* Gris para volver */
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        .btn-back:hover {
+            background-color: #5a6268;
+        }
+        .error-message {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border: 1px solid #f5c6cb;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
-    <?php include("../including/navbar.php"); ?>
+    <main class="contenedor">
+        <div class="form-container">
+            <h1>Editar Proveedor</h1>
 
-    <main class="container">
-        <h2>Modificar Proveedor</h2>
+            <?php if (!empty($form_error)): ?>
+                <div class="error-message">
+                    <?php echo htmlspecialchars($form_error); ?>
+                </div>
+            <?php endif; ?>
 
-        <?php if ($mensaje): ?>
-            <div class="success" style="color: green;"><?php echo htmlspecialchars($mensaje); ?></div>
-        <?php endif; ?>
+            <form action="editar_proveedores.php" method="POST">
+                <input type="hidden" name="id_proveedor" value="<?php echo htmlspecialchars($id_proveedor); ?>">
 
-        <?php if ($error): ?>
-            <div class="error" style="color: red;"><?php echo htmlspecialchars($error); ?></div>
-        <?php endif; ?>
+                <div class="form-group">
+                    <label for="nombre">Nombre del Proveedor:</label>
+                    <input type="text" id="nombre" name="nombre" value="<?php echo htmlspecialchars($nombre); ?>" required>
+                </div>
 
-        <form method="POST">
-            <label for="nombre">Nombre:</label>
-            <input type="text" name="nombre" id="nombre" required value="<?php echo htmlspecialchars($proveedor['nombre']); ?>">
+                <div class="form-group">
+                    <label for="producto">Producto Principal:</label>
+                    <input type="text" id="producto" name="producto" value="<?php echo htmlspecialchars($producto); ?>" required>
+                </div>
 
-            <label for="telefono">Teléfono:</label>
-            <input type="text" name="telefono" id="telefono" required value="<?php echo htmlspecialchars($proveedor['telefono']); ?>">
+                <div class="form-group">
+                    <label for="telefono">Teléfono:</label>
+                    <input type="text" id="telefono" name="telefono" value="<?php echo htmlspecialchars($telefono); ?>" required>
+                </div>
 
-            <label for="direccion">Dirección:</label>
-            <textarea name="direccion" id="direccion" rows="4" required><?php echo htmlspecialchars($proveedor['direccion']); ?></textarea>
-
-            <button type="submit">Guardar Cambios</button>
-        </form>
-
-        <nav>
-            <a href="listar_proveedores.php" class="btn">Volver a Proveedores</a>
-        </nav>
+                <button type="submit" class="btn-submit">Guardar Cambios</button>
+                <a href="listar_proveedores.php" class="btn-back">Cancelar y Volver</a>
+            </form>
+        </div>
     </main>
-
-    <footer>
-        <p>&copy; 2025 Mi Sistema</p>
-    </footer>
 </body>
 </html>
