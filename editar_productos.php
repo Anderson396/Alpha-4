@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stock = intval($_POST['stock']);
     $precio = floatval($_POST['precio']);
     $id_categoria = intval($_POST['id_categoria']);
-    $imagen_actual_db = $_POST['imagen_actual'] ?? '';
+    $imagen_actual_db = $_POST['imagen'] ?? '';
     $imagen_a_guardar = $imagen_actual_db;
 
     // Si se sube una nueva imagen
@@ -100,7 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id'])) {
     <?php endif; ?>
 
     <?php if ($producto): ?>
-        <form enctype="multipart/form-data"  method="POST" enctype="multipart/form-data">
+        <form method="POST" enctype="multipart/form-data">
             <input type="hidden" name="id_producto" value="<?php echo $producto['id_producto']; ?>">
             <input type="hidden" name="imagen_actual" value="<?php echo htmlspecialchars($producto['imagen']); ?>">
 
@@ -116,32 +116,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id'])) {
             <label>Precio:</label>
             <input type="number" step="0.01" name="precio" value="<?php echo $producto['precio']; ?>" required><br>
 
-          <label for="categoria">Categoría:</label>
-            <select name="id_categoria" id="categoria" required>
-            <?php
-            $query_categorias = "SELECT * FROM categorias";
-            $result_categorias = $conexion->query($query_categorias);
-            if ($result_categorias && $result_categorias->num_rows > 0):
-                while ($cat = $result_categorias->fetch_assoc()):
-                $selected = ($producto['id_categoria'] == $cat['id_categoria']) ? 'selected' : '';
-            ?>
-        <option value="<?= htmlspecialchars($cat['id_categoria']) ?>" <?= $selected ?>>
-            <?= htmlspecialchars($cat['nombre']) ?>
-        </option>
-    <?php endwhile; else: ?>
-        <option value="">No hay categorías</option>
-    <?php endif; ?>
+            
+<label for="categoria">Categoría:</label>
+<select name="id_categoria" id="categoria" required>
+<?php
+$query_categorias = "SELECT * FROM categorias";
+$result_categorias = $conexion->query($query_categorias);
+if ($result_categorias && $result_categorias->num_rows > 0):
+    while ($cat = $result_categorias->fetch_assoc()):
+        $selected = ($producto['id_categoria'] == $cat['id_categoria']) ? 'selected' : '';
+?>
+    <option value="<?= htmlspecialchars($cat['id_categoria']) ?>" <?= $selected ?>>
+        <?= htmlspecialchars($cat['nombre']) ?>
+    </option>
+<?php endwhile; else: ?>
+    <option value="">No hay categorías</option>
+<?php endif; ?>
 </select>
-
-
-        <option value="<?= htmlspecialchars($cat['id_categoria']) ?>" <?= $selected ?>>
-            <?= htmlspecialchars($cat['nombre']) ?>
-        </option>
-    <?php endwhile; else: ?>
-        <option value="">No hay categorías registradas</option>
-    <?php endif; ?>
-</select>
-
+<br>
 
             <label>Imagen actual:</label><br>
             <?php if (!empty($producto['imagen']) && file_exists('../imagenes/' . $producto['imagen'])): ?>
@@ -151,7 +143,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id'])) {
             <?php endif; ?>
 
             <label>Nueva Imagen (opcional):</label>
-            <input type="file" name="imagen_nueva" accept="image/*"><br><br>
+            
+<?php if (!empty($producto['imagen'])): ?>
+    <p>Imagen actual:</p>
+    <img src="../imagenes/<?= htmlspecialchars($producto['imagen']) ?>" alt="Imagen actual" width="150">
+<?php endif; ?>
+<input type="file" name="imagen_nueva" accept="image/*"><br><br>
 
             <button type="submit">Actualizar</button>
         </form>
