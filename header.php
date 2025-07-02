@@ -1,31 +1,26 @@
 <?php
-// Inicia la sesión si aún no ha sido iniciada.
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+if (session_status() === PHP_SESSION_NONE) session_start();
 
-// Recupera el usuario y el rol desde la sesión, si existen.
-$user = $_SESSION['user'] ?? null;
-$rol = $_SESSION['rol'] ?? null;
+$user = $_SESSION['usuario'] ?? null;
+$rol  = $_SESSION['rol']    ?? null;
 ?>
+<header>
+  <nav>
+    <ul class="menu">
+      <li><a href="/pagina_pasteleria/index.php">Inicio</a></li>
+      <li><a href="/pagina_pasteleria/carrito/carrito.php">Carrito</a></li>
 
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Tienda Virtual</title>
-    <!-- Enlace al archivo de estilos CSS -->
-    <link rel="stylesheet" href="/tienda_virtual/styles/style.css" />
-</head>
-<body>
-    <header>
-        <nav>
-            <ul class="menu">
-                <!-- Enlace a la página principal -->
-                <li><a href="/index.php">Inicio</a></li>
-
-                <!-- Enlace al carrito de compras -->
-                <li><a href="/tienda_virtual/carrito/carrito.php">Carrito</a></li>
-        </nav>
-    </header>
+      <?php if (!$user): ?>
+        <li><a href="/pagina_pasteleria/login/login.php">Iniciar sesión</a></li>
+        <li><a href="/pagina_pasteleria/login/registrar.php">Crear cuenta</a></li>
+      <?php else: ?>
+        <li><a href="/pagina_pasteleria/perfil.php">Mi Perfil</a></li>
+        <?php if ($rol === 'admin'): ?>
+          <li><a href="/pagina_pasteleria/admin/productos.php">Productos</a></li>
+          <li><a href="/pagina_pasteleria/admin/listar_proveedores.php">Proveedores</a></li>
+        <?php endif; ?>
+        <li><a href="/pagina_pasteleria/login/cerrar_sesion.php">Cerrar sesión</a></li>
+      <?php endif; ?>
+    </ul>
+  </nav>
+</header>
