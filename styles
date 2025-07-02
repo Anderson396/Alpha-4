@@ -108,7 +108,9 @@ header {
   padding-top: 40px;
   box-shadow: 2px 0 5px rgba(0,0,0,0.1);
   z-index: 100;
+
 }
+
 
 nav ul.menu {
   list-style: none;
@@ -140,5 +142,9 @@ main, .container, .contenido-principal {
   margin-left: 200px;
   padding: 20px;
 }
+
+
+
+
 
 
