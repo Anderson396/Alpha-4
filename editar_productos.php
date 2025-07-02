@@ -116,15 +116,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id'])) {
             <label>Precio:</label>
             <input type="number" step="0.01" name="precio" value="<?php echo $producto['precio']; ?>" required><br>
 
-            <label>Categoría:</label>
-            <select name="id_categoria" required>
-                <option value="">-- Seleccionar --</option>
-                <?php foreach ($categorias as $cat): ?>
-                    <option value="<?php echo $cat['id_categoria']; ?>" <?php echo $producto['id_categoria'] == $cat['id_categoria'] ? 'selected' : ''; ?>>
-                        <?php echo htmlspecialchars($cat['nombre']); ?>
-                    </option>
-                <?php endforeach; ?>
-            </select><br>
+           <label for="categoria">Categoría:</label>
+           <select name="categoria" id="categoria" required>
+            <?php
+            // Cargar categorías
+            $query_categorias = "SELECT * FROM categorias";
+            $result_categorias = $conexion->query($query_categorias);
+            if ($result_categorias && $result_categorias->num_rows > 0):
+                while ($cat = $result_categorias->fetch_assoc()):
+                $selected = ($producto['id_categoria'] == $cat['id_categoria']) ? 'selected' : '';
+            ?>
+        <option value="<?= htmlspecialchars($cat['id_categoria']) ?>" <?= $selected ?>>
+            <?= htmlspecialchars($cat['nombre']) ?>
+        </option>
+    <?php endwhile; else: ?>
+        <option value="">No hay categorías registradas</option>
+    <?php endif; ?>
+</select>
+
 
             <label>Imagen actual:</label><br>
             <?php if (!empty($producto['imagen']) && file_exists('../imagenes/' . $producto['imagen'])): ?>
