@@ -131,7 +131,7 @@ $resultado = $conexion->query($query);
                             <td><?php echo htmlspecialchars($proveedor['producto']); ?></td>
                             <td><?php echo htmlspecialchars($proveedor['telefono']); ?></td>
                             <td class="acciones">
-                                <a href="editar_proveedor.php?id=<?php echo htmlspecialchars($proveedor['id_proveedor']); ?>" class="btn-editar">Editar</a>
+                                <a href="editar_proveedores.php?id=<?php echo htmlspecialchars($proveedor['id_proveedor']); ?>" class="btn-editar">Editar</a>
                                 <a href="eliminar_proveedores.php?id=<?php echo htmlspecialchars($proveedor['id_proveedor']); ?>" class="btn-eliminar" onclick="return confirm('¿Estás seguro de que quieres eliminar este proveedor?');">Eliminar</a>
                             </td>
                         </tr>
