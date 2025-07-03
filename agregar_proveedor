@@ -1,0 +1,181 @@
+<?php
+session_start();
+require_once '../including/conexion.php'; // Incluye tu archivo de conexión a la base de datos
+
+// Verificar si la conexión a la base de datos es válida
+if (!$conexion) {
+    $_SESSION['error'] = "Error de conexión a la base de datos.";
+    header("Location: listar_proveedores.php");
+    exit();
+}
+
+// Inicializar variables para el formulario
+$nombre = '';
+$producto = '';
+$telefono = '';
+$form_error = ''; // Para almacenar errores del formulario
+
+// 1. Procesar el formulario cuando se envía (POST)
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // 2. Recoger y sanear los datos del formulario
+    $nombre = trim($_POST['nombre'] ?? '');
+    $producto = trim($_POST['producto'] ?? '');
+    $telefono = trim($_POST['telefono'] ?? '');
+
+    // 3. Validar los datos (ejemplos básicos)
+    if (empty($nombre)) {
+        $form_error = 'El nombre del proveedor es obligatorio.';
+    } elseif (empty($producto)) {
+        $form_error = 'El producto principal es obligatorio.';
+    } elseif (empty($telefono)) {
+        $form_error = 'El número de teléfono es obligatorio.';
+    }
+    // Puedes añadir más validaciones, por ejemplo, formato de teléfono, longitud, etc.
+
+    // 4. Si no hay errores de validación, intentar guardar en la base de datos
+    if (empty($form_error)) {
+        // Prepara la consulta SQL para insertar un nuevo proveedor
+        // ASEGÚRATE DE QUE LOS NOMBRES DE LAS COLUMNAS coincidan exactamente con tu base de datos
+        $stmt = $conexion->prepare("INSERT INTO proveedores (nombre, producto, telefono) VALUES (?, ?, ?)");
+
+        if ($stmt === false) {
+            $form_error = "Error al preparar la consulta de inserción: " . $conexion->error;
+        } else {
+            // Vincula los parámetros
+            // 'sss' indica que los tres parámetros son de tipo string
+            $stmt->bind_param("sss", $nombre, $producto, $telefono);
+
+            // Ejecuta la consulta
+            if ($stmt->execute()) {
+                $_SESSION['message'] = "Proveedor '" . htmlspecialchars($nombre) . "' agregado exitosamente.";
+                header("Location: listar_proveedores.php"); // Redirige de vuelta a la lista
+                exit();
+            } else {
+                $form_error = "Error al agregar el proveedor: " . $stmt->error;
+            }
+            $stmt->close();
+        }
+    }
+}
+// La conexión se cierra al final del script si no hay redirección
+// $conexion->close(); // No es necesario aquí si usas header("Location")
+?>
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Agregar Proveedor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Savate&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles/Style4.css">
+    <style>
+        /* Estilos específicos para el formulario de agregar */
+        .form-container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            margin: 30px auto;
+        }
+        .form-container h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 25px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        .form-group input[type="text"] {
+            width: calc(100% - 20px); /* Ajusta para padding */
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+            box-sizing: border-box; /* Incluye padding y border en el ancho total */
+        }
+        .form-group input[type="text"]:focus {
+            border-color: #007bff;
+            outline: none;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.25);
+        }
+        .btn-submit {
+            background-color: #28a745; /* Verde para enviar */
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            width: 100%;
+            transition: background-color 0.3s ease;
+        }
+        .btn-submit:hover {
+            background-color: #218838; /* Verde más oscuro al pasar el ratón */
+        }
+        .btn-back {
+            display: block;
+            width: calc(100% - 40px); /* Para que el botón ocupe casi todo el ancho */
+            text-align: center;
+            padding: 10px 20px;
+            margin-top: 15px;
+            background-color: #6c757d; /* Gris para volver */
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        .btn-back:hover {
+            background-color: #5a6268;
+        }
+        .error-message {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border: 1px solid #f5c6cb;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <main class="contenedor">
+        <div class="form-container">
+            <h1>Agregar Nuevo Proveedor</h1>
+
+            <?php if (!empty($form_error)): ?>
+                <div class="error-message">
+                    <?php echo htmlspecialchars($form_error); ?>
+                </div>
+            <?php endif; ?>
+
+            <form action="agregar_proveedor.php" method="POST">
+                <div class="form-group">
+                    <label for="nombre">Nombre del Proveedor:</label>
+                    <input type="text" id="nombre" name="nombre" value="<?php echo htmlspecialchars($nombre); ?>" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="producto">Producto Principal:</label>
+                    <input type="text" id="producto" name="producto" value="<?php echo htmlspecialchars($producto); ?>" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="telefono">Teléfono:</label>
+                    <input type="text" id="telefono" name="telefono" value="<?php echo htmlspecialchars($telefono); ?>" required>
+                </div>
+
+                <button type="submit" class="btn-submit">Guardar Proveedor</button>
+                <a href="listar_proveedores.php" class="btn-back">Volver al Listado</a>
+            </form>
+        </div>
+    </main>
+</body>
+</html>
