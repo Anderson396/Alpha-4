@@ -86,7 +86,8 @@ if (isset($_POST['action']) && $_POST['action'] === 'update_quantity' && isset($
     if (isset($_SESSION['carrito'][$id_producto])) {
         if ($nueva_cantidad <= 0) {
             // Si la cantidad es 0 o menos, eliminar el producto
-            $nombre_producto = $_SESSION['carrito'][$id_producto]['nombre'];
+            // ¡Asegúrate de que 'nombre' exista antes de acceder!
+            $nombre_producto = isset($_SESSION['carrito'][$id_producto]['nombre']) ? $_SESSION['carrito'][$id_producto]['nombre'] : 'Producto';
             unset($_SESSION['carrito'][$id_producto]);
             $status_message = '<p class="success-message">✔️ Producto "' . htmlspecialchars($nombre_producto) . '" eliminado del carrito.</p>';
         } else {
@@ -108,12 +109,36 @@ if (isset($_POST['action']) && $_POST['action'] === 'update_quantity' && isset($
 
                 if ($nueva_cantidad <= $stock_disponible) {
                     // Actualizar la cantidad si hay stock suficiente
-                    $_SESSION['carrito'][$id_producto]['cantidad'] = $nueva_cantidad;
-                    $status_message = '<p class="success-message">✔️ Cantidad de "' . $nombre_db . '" actualizada.</p>';
+                    // ¡Asegúrate de que 'cantidad' exista antes de actualizar!
+                    if (isset($_SESSION['carrito'][$id_producto]['cantidad'])) {
+                        $_SESSION['carrito'][$id_producto]['cantidad'] = $nueva_cantidad;
+                        $status_message = '<p class="success-message">✔️ Cantidad de "' . $nombre_db . '" actualizada.</p>';
+                    } else {
+                        // Esto podría indicar un carrito corrupto, añadir el item si no existe la clave 'cantidad'
+                        $_SESSION['carrito'][$id_producto] = [
+                            'nombre' => $nombre_db,
+                            'precio' => (float)$_SESSION['carrito'][$id_producto]['precio'], // Asume que precio existe si estamos aquí
+                            'cantidad' => $nueva_cantidad,
+                            'imagen' => isset($_SESSION['carrito'][$id_producto]['imagen']) ? $_SESSION['carrito'][$id_producto]['imagen'] : 'placeholder.png'
+                        ];
+                        $status_message = '<p class="success-message">✔️ Cantidad de "' . $nombre_db . '" actualizada (y estructura corregida).</p>';
+                    }
                 } else {
                     // Si no hay suficiente stock, ajustar al máximo disponible
-                    $_SESSION['carrito'][$id_producto]['cantidad'] = $stock_disponible;
-                    $status_message = '<p class="warning-message">⚠️ La cantidad de "' . $nombre_db . '" se ajustó a ' . $stock_disponible . ', que es el stock disponible.</p>';
+                    // ¡Asegúrate de que 'cantidad' exista antes de actualizar!
+                    if (isset($_SESSION['carrito'][$id_producto]['cantidad'])) {
+                        $_SESSION['carrito'][$id_producto]['cantidad'] = $stock_disponible;
+                        $status_message = '<p class="warning-message">⚠️ La cantidad de "' . $nombre_db . '" se ajustó a ' . $stock_disponible . ', que es el stock disponible.</p>';
+                    } else {
+                        // Añadir el item si no existe la clave 'cantidad'
+                        $_SESSION['carrito'][$id_producto] = [
+                            'nombre' => $nombre_db,
+                            'precio' => (float)$_SESSION['carrito'][$id_producto]['precio'],
+                            'cantidad' => $stock_disponible,
+                            'imagen' => isset($_SESSION['carrito'][$id_producto]['imagen']) ? $_SESSION['carrito'][$id_producto]['imagen'] : 'placeholder.png'
+                        ];
+                        $status_message = '<p class="warning-message">⚠️ Cantidad de "' . $nombre_db . '" ajustada a stock (y estructura corregida).</p>';
+                    }
                 }
             } else {
                 // Si el producto ya no existe, eliminarlo del carrito
@@ -134,7 +159,8 @@ if (isset($_POST['action']) && $_POST['action'] === 'update_quantity' && isset($
 if (isset($_GET['action']) && $_GET['action'] === 'remove_item' && isset($_GET['id_producto'])) {
     $id_producto = (int)$_GET['id_producto'];
     if (isset($_SESSION['carrito'][$id_producto])) {
-        $nombre_producto_eliminado = $_SESSION['carrito'][$id_producto]['nombre'];
+        // ¡Asegúrate de que 'nombre' exista antes de acceder!
+        $nombre_producto_eliminado = isset($_SESSION['carrito'][$id_producto]['nombre']) ? $_SESSION['carrito'][$id_producto]['nombre'] : 'Producto';
         unset($_SESSION['carrito'][$id_producto]);
         $status_message = '<p class="success-message">✔️ Producto "' . htmlspecialchars($nombre_producto_eliminado) . '" eliminado del carrito.</p>';
     } else {
@@ -154,7 +180,10 @@ if (isset($_GET['status_message'])) {
 $total_carrito = 0;
 if (!empty($_SESSION['carrito'])) {
     foreach ($_SESSION['carrito'] as $item) {
-        $total_carrito += $item['precio'] * $item['cantidad'];
+        // ** CORRECCIÓN LÍNEA 157 (aproximadamente): Verificación de claves **
+        if (isset($item['precio']) && isset($item['cantidad'])) {
+            $total_carrito += (float)$item['precio'] * (int)$item['cantidad'];
+        }
     }
 }
 ?>
@@ -316,97 +345,97 @@ if (!empty($_SESSION['carrito'])) {
         }
         /* ESTILOS DEL ENCABEZADO (HEADER) */
 
-header {
-    width: 100%;
-    background-color: #ffffff; /* Fondo blanco para el área del encabezado */
-    padding: 20px 0; /* Espacio arriba y abajo del contenido del header */
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Sombra sutil debajo del header */
-    display: flex; /* Usamos Flexbox para organizar el contenido */
-    flex-direction: column; /* Apila los elementos (logo y nav) verticalmente */
-    align-items: center; /* Centra los elementos hijos horizontalmente */
-    justify-content: center; /* Centra los elementos hijos verticalmente si hay espacio */
-}
+        header {
+            width: 100%;
+            background-color: #ffffff; /* Fondo blanco para el área del encabezado */
+            padding: 20px 0; /* Espacio arriba y abajo del contenido del header */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Sombra sutil debajo del header */
+            display: flex; /* Usamos Flexbox para organizar el contenido */
+            flex-direction: column; /* Apila los elementos (logo y nav) verticalmente */
+            align-items: center; /* Centra los elementos hijos horizontalmente */
+            justify-content: center; /* Centra los elementos hijos verticalmente si hay espacio */
+        }
 
-/* Contenedor del logo y el título */
-.logo {
-    text-align: center; /* Centra la imagen y el texto dentro de este div */
-    margin-bottom: 20px; /* Espacio entre el área del logo/título y la navegación */
-}
+        /* Contenedor del logo y el título */
+        .logo {
+            text-align: center; /* Centra la imagen y el texto dentro de este div */
+            margin-bottom: 20px; /* Espacio entre el área del logo/título y la navegación */
+        }
 
-/* Estilo para la imagen del logo */
-.site-logo {
-    height: 150px; /* Altura fija para el logo como en tu imagen */
-    width: auto; /* Mantiene la proporción de la imagen */
-    display: block; /* Hace que la imagen se comporte como un bloque para que el h2 vaya debajo */
-    margin: 0 auto 5px auto; /* Centra la imagen horizontalmente y le da un pequeño margen inferior para separar del título */
-}
+        /* Estilo para la imagen del logo */
+        .site-logo {
+            height: 150px; /* Altura fija para el logo como en tu imagen */
+            width: auto; /* Mantiene la proporción de la imagen */
+            display: block; /* Hace que la imagen se comporte como un bloque para que el h2 vaya debajo */
+            margin: 0 auto 5px auto; /* Centra la imagen horizontalmente y le da un pequeño margen inferior para separar del título */
+        }
 
-/* Estilo para el título "Dulces Creaciones" */
-.site-title {
-    color: #ff69b4; /* Color rosa fuerte */
-    font-family: 'Arial', sans-serif; /* Puedes cambiar esto por una fuente más artística si la importas */
-    font-size: 2.5em; /* Tamaño del texto del título */
-    margin: 0; /* Elimina los márgenes predeterminados del h2 */
-    line-height: 1.2; /* Ajusta el espaciado de línea si la fuente es muy grande */
-}
+        /* Estilo para el título "Dulces Creaciones" */
+        .site-title {
+            color: #ff69b4; /* Color rosa fuerte */
+            font-family: 'Arial', sans-serif; /* Puedes cambiar esto por una fuente más artística si la importas */
+            font-size: 2.5em; /* Tamaño del texto del título */
+            margin: 0; /* Elimina los márgenes predeterminados del h2 */
+            line-height: 1.2; /* Ajusta el espaciado de línea si la fuente es muy grande */
+        }
 
-/* Estilos para la navegación principal */
-.main-nav ul {
-    list-style: none; /* Elimina los puntos de la lista */
-    padding: 0;
-    margin: 0;
-    display: flex; /* Hace que los elementos de la lista se muestren en fila */
-    justify-content: center; /* Centra los elementos de la navegación horizontalmente */
-    flex-wrap: wrap; /* Permite que los elementos se envuelvan a la siguiente línea en pantallas pequeñas */
-    gap: 20px; /* Espacio entre cada elemento de la navegación (Inicio, Mi Perfil, etc.) */
-}
+        /* Estilos para la navegación principal */
+        .main-nav ul {
+            list-style: none; /* Elimina los puntos de la lista */
+            padding: 0;
+            margin: 0;
+            display: flex; /* Hace que los elementos de la lista se muestren en fila */
+            justify-content: center; /* Centra los elementos de la navegación horizontalmente */
+            flex-wrap: wrap; /* Permite que los elementos se envuelvan a la siguiente línea en pantallas pequeñas */
+            gap: 20px; /* Espacio entre cada elemento de la navegación (Inicio, Mi Perfil, etc.) */
+        }
 
-.main-nav li {
-    /* No necesita margen lateral si usas 'gap' en el 'ul' */
-}
+        .main-nav li {
+            /* No necesita margen lateral si usas 'gap' en el 'ul' */
+        }
 
-.main-nav a {
-    text-decoration: none; /* Elimina el subrayado de los enlaces */
-    color: #ff69b4; /* Color rosa fuerte para los enlaces */
-    font-weight: bold;
-    padding: 8px 15px; /* Espacio interno de los enlaces para que parezcan botones */
-    transition: color 0.3s ease, background-color 0.3s ease; /* Transición suave para efectos hover */
-    border-radius: 5px; /* Bordes ligeramente redondeados */
-}
+        .main-nav a {
+            text-decoration: none; /* Elimina el subrayado de los enlaces */
+            color: #ff69b4; /* Color rosa fuerte para los enlaces */
+            font-weight: bold;
+            padding: 8px 15px; /* Espacio interno de los enlaces para que parezcan botones */
+            transition: color 0.3s ease, background-color 0.3s ease; /* Transición suave para efectos hover */
+            border-radius: 5px; /* Bordes ligeramente redondeados */
+        }
 
-.main-nav a:hover {
-    color: #ffffff; /* Texto blanco al pasar el ratón */
-    background-color: #ff1493; /* Fondo rosa más oscuro al pasar el ratón */
-}
+        .main-nav a:hover {
+            color: #ffffff; /* Texto blanco al pasar el ratón */
+            background-color: #ff1493; /* Fondo rosa más oscuro al pasar el ratón */
+        }
 
-/* Media Queries para responsividad (ajustes para pantallas más pequeñas) */
-@media (max-width: 768px) {
-    header {
-        padding: 15px 0;
-    }
+        /* Media Queries para responsividad (ajustes para pantallas más pequeñas) */
+        @media (max-width: 768px) {
+            header {
+                padding: 15px 0;
+            }
 
-    .site-logo {
-        height: 100px; /* Reduce el tamaño del logo en pantallas pequeñas */
-        margin-bottom: 5px;
-    }
+            .site-logo {
+                height: 100px; /* Reduce el tamaño del logo en pantallas pequeñas */
+                margin-bottom: 5px;
+            }
 
-    .site-title {
-        font-size: 1.8em; /* Reduce el tamaño del título en pantallas pequeñas */
-    }
+            .site-title {
+                font-size: 1.8em; /* Reduce el tamaño del título en pantallas pequeñas */
+            }
 
-    .main-nav ul {
-        flex-direction: column; /* Apila los elementos de la navegación verticalmente */
-        align-items: center; /* Centra los enlaces apilados */
-        gap: 10px; /* Menos espacio vertical entre enlaces apilados */
-        margin-top: 10px; /* Un poco de espacio extra arriba de la nav cuando está apilada */
-    }
+            .main-nav ul {
+                flex-direction: column; /* Apila los elementos de la navegación verticalmente */
+                align-items: center; /* Centra los enlaces apilados */
+                gap: 10px; /* Menos espacio vertical entre enlaces apilados */
+                margin-top: 10px; /* Un poco de espacio extra arriba de la nav cuando está apilada */
+            }
 
-    .main-nav a {
-        width: calc(100% - 30px); /* Asegura que el enlace ocupe casi todo el ancho disponible */
-        text-align: center; /* Centra el texto dentro del enlace */
-        max-width: 200px; /* Limita el ancho máximo para que no se extienda demasiado */
-    }
-}
+            .main-nav a {
+                width: calc(100% - 30px); /* Asegura que el enlace ocupe casi todo el ancho disponible */
+                text-align: center; /* Centra el texto dentro del enlace */
+                max-width: 200px; /* Limita el ancho máximo para que no se extienda demasiado */
+            }
+        }
     </style>
 </head>
 <body>
@@ -415,7 +444,7 @@ header {
     <img src="/pagina_pasteleria/imagenes/logo.jpg.jpeg" alt="Dulces Creaciones Logo" class="site-logo">
     <h2 class="site-title">Dulces Creaciones</h2>
 </div>
-         <nav class="main-nav">
+          <nav class="main-nav">
         <ul>
             <li><a href="/pagina_pasteleria/index.php">Inicio</a></li>
             <li><a href="/pagina_pasteleria/perfil.php">Mi Perfil</a></li>
@@ -443,18 +472,28 @@ header {
         <?php else: ?>
             <article>
                 <?php foreach ($_SESSION['carrito'] as $id_producto => $item): ?>
+                    <?php
+                    // ** CORRECCIONES AQUÍ: Verifica si las claves existen antes de usarlas para la visualización **
+                    // Estas variables temporales se usan en las líneas que antes te daban error (454, 455, 456, 466)
+                    $nombre_item = isset($item['nombre']) ? htmlspecialchars($item['nombre']) : 'Producto Desconocido';
+                    $precio_item = isset($item['precio']) ? (float)$item['precio'] : 0.00;
+                    $cantidad_item = isset($item['cantidad']) ? (int)$item['cantidad'] : 0;
+                    $imagen_item = isset($item['imagen']) ? htmlspecialchars($item['imagen']) : 'placeholder.png'; // Un fallback para la imagen
+
+                    // Opcional: Si deseas omitir la visualización de un item completamente corrupto
+                    // if ($precio_item === 0.00 && $cantidad_item === 0 && $nombre_item === 'Producto Desconocido') {
+                    //      continue; // Salta este item si no tiene información válida.
+                    // }
+                    ?>
                     <div class="cart-item">
-                        <?php if (!empty($item['imagen'])): ?>
-                            <img src="../imagenes/<?php echo htmlspecialchars($item['imagen']); ?>"
-                                alt="Imagen del producto <?php echo htmlspecialchars($item['nombre']); ?>" />
+                        <?php if (!empty($imagen_item) && $imagen_item !== 'placeholder.png'): // Usa la variable segura $imagen_item ?>
+                            <img src="../imagenes/<?php echo $imagen_item; ?>"
+                                alt="Imagen del producto <?php echo $nombre_item; ?>" />
                         <?php else: ?>
                             <img src="../imagenes/placeholder.png" alt="Sin imagen" />
                         <?php endif; ?>
                         <div class="cart-item-details">
-                            <h3><?php echo htmlspecialchars($item['nombre']); ?></h3>
-                            <p style= "bold; font-size: 1.2em;">Precio Unitario: $<?php echo number_format($item['precio'], 2); ?></p>
-                            <p  style= "bold; font-size: 1.0em;">Subtotal: $<?php echo number_format($item['precio'] * $item['cantidad'], 2); ?></p>
-                        </div>
+                            <h3><?php echo $nombre_item; ?></h3> <p style= "bold; font-size: 1.2em;">Precio Unitario: $<?php echo number_format($precio_item, 2); ?></p> <p style= "bold; font-size: 1.0em;">Subtotal: $<?php echo number_format($precio_item * $cantidad_item, 2); ?></p> </div>
                         <div class="cart-item-actions">
                             <form action="carrito.php" method="post">
                                 <input type="hidden" name="action" value="update_quantity">
@@ -463,15 +502,13 @@ header {
                                 <input type="number"
                                     id="quantity-<?php echo (int)$id_producto; ?>"
                                     name="cantidad"
-                                    value="<?php echo (int)$item['cantidad']; ?>"
-                                    min="0"
+                                    value="<?php echo $cantidad_item; ?>" min="0"
                                     onchange="this.form.submit()" />
                             </form>
                             <a class="btn delete"
                                href="carrito.php?action=remove_item&id_producto=<?php echo (int)$id_producto; ?>"
                                onclick="return confirm('¿Estás seguro de que deseas eliminar este producto del carrito?');"
-                               role="button" aria-label="Eliminar <?php echo htmlspecialchars($item['nombre']); ?> del carrito" style="font-weight: bold; font-size: 1.2em; color:black;">Eliminar</a>
-                        </div>
+                               role="button" aria-label="Eliminar <?php echo $nombre_item; ?> del carrito" style="font-weight: bold; font-size: 1.2em; color:black;">Eliminar</a> </div>
                     </div>
                 <?php endforeach; ?>
 
