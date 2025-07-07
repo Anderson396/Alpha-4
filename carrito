@@ -2,152 +2,135 @@
 // Iniciamos sesión para poder usar las variables de sesión
 session_start();
 
-// Conectamos a la base de datos
-// Asegúrate de que la ruta a 'conexion.php' sea correcta según tu estructura de archivos.
-// Por ejemplo, si 'carrito.php' está en 'tu_proyecto/carrito/' y 'conexion.php' está en 'tu_proyecto/including/',
-// entonces la ruta '../including/conexion.php' es la correcta.
+// Incluimos el archivo de conexión a la base de datos
+// ASEGÚRATE DE QUE LA RUTA SEA CORRECTA.
+// La ruta '../including/conexion.php' es correcta si 'carrito.php'
+// y la carpeta 'including' están en el mismo directorio principal.
 require_once '../including/conexion.php';
 
-// Inicializar el carrito si no existe en la sesión
+// Inicializar el carrito en la sesión si no existe
 if (!isset($_SESSION['carrito'])) {
     $_SESSION['carrito'] = [];
 }
 
-// Mensaje de estado para el usuario
+// Inicializar la variable para el mensaje de estado
 $status_message = '';
 
-// --- Lógica para agregar, actualizar y eliminar productos del carrito ---
+// --- Lógica para procesar acciones del carrito (agregar, actualizar, eliminar) ---
 
-// Si se recibe una acción de agregar al carrito
+// Procesar la acción de agregar un producto al carrito
 if (isset($_POST['action']) && $_POST['action'] === 'add_to_cart' && isset($_POST['id_producto'])) {
     $id_producto = (int)$_POST['id_producto'];
-    // La cantidad por defecto es 1 si no se especifica, o la cantidad enviada desde el formulario
     $cantidad_a_agregar = isset($_POST['cantidad']) ? (int)$_POST['cantidad'] : 1;
 
-    // Validar que la cantidad sea al menos 1 para agregar
-    if ($cantidad_a_agregar <= 0) {
-        $cantidad_a_agregar = 1; // Si envían 0 o negativo, lo ajustamos a 1
-    }
-
-    // Obtener información del producto desde la base de datos para asegurar stock y precio actual
+    // Obtener información del producto desde la base de datos
     $stmt = $conexion->prepare("SELECT nombre, precio, imagen, stock FROM productos WHERE id_producto = ?");
-
-    // Verificar si la preparación de la consulta falló
     if ($stmt === false) {
-        error_log('Error al preparar la consulta SELECT en carrito.php: ' . $conexion->error);
-        $status_message = '<p class="error-message">❌ Error interno del servidor al buscar producto.</p>';
+        // Registra el error en el log del servidor para depuración
+        error_log('Error al preparar consulta de selección en carrito.php: ' . $conexion->error);
+        $status_message = '<p class="error-message">❌ Error interno del servidor.</p>';
+        // Redirige con el mensaje de error
         header('Location: carrito.php?status_message=' . urlencode($status_message));
         exit();
     }
-
+    
     $stmt->bind_param("i", $id_producto);
     $stmt->execute();
     $result = $stmt->get_result();
 
     if ($result->num_rows > 0) {
         $producto_db = $result->fetch_assoc();
-        $stock_disponible = $producto_db['stock'];
+        $stock_disponible = (int)$producto_db['stock'];
         $nombre_db = htmlspecialchars($producto_db['nombre']);
         $precio_db = (float)$producto_db['precio'];
         $imagen_db = htmlspecialchars($producto_db['imagen']);
 
-        // Calcular la cantidad actual en el carrito para este producto
-        $cantidad_en_carrito = isset($_SESSION['carrito'][$id_producto]) ? $_SESSION['carrito'][$id_producto]['cantidad'] : 0;
-        $nueva_cantidad_total = $cantidad_en_carrito + $cantidad_a_agregar;
+        // Calcular la cantidad total que habría en el carrito
+        $cantidad_en_carrito_actual = isset($_SESSION['carrito'][$id_producto]) ? $_SESSION['carrito'][$id_producto]['cantidad'] : 0;
+        $nueva_cantidad_total = $cantidad_en_carrito_actual + $cantidad_a_agregar;
 
-        // Verificar si hay suficiente stock para la cantidad total deseada
-        if ($nueva_cantidad_total <= $stock_disponible) {
+        if ($nueva_cantidad_total > $stock_disponible) {
+            // Si la nueva cantidad excede el stock, ajustarla y mostrar una advertencia
+            $_SESSION['carrito'][$id_producto] = [
+                'nombre' => $nombre_db,
+                'precio' => $precio_db,
+                'cantidad' => $stock_disponible,
+                'imagen' => $imagen_db
+            ];
+            $status_message = '<p class="warning-message">⚠️ Solo hay ' . $stock_disponible . ' unidades de "' . $nombre_db . '" disponibles. Se ajustó la cantidad en tu carrito.</p>';
+        } else {
+            // Si hay stock suficiente, agregar o actualizar el producto en el carrito
             $_SESSION['carrito'][$id_producto] = [
                 'nombre' => $nombre_db,
                 'precio' => $precio_db,
                 'cantidad' => $nueva_cantidad_total,
                 'imagen' => $imagen_db
             ];
-            $status_message = '<p class="success-message">✔️ Producto añadido al carrito.</p>';
-        } else {
-            // Si la cantidad a agregar excede el stock, ajustamos al máximo disponible
-            // y si ya hay en el carrito, se ajusta para no sobrepasar el stock.
-            // Opcional: Podrías simplemente no añadir si excede, pero ajustar es más amigable.
-            if ($cantidad_en_carrito < $stock_disponible) {
-                 $_SESSION['carrito'][$id_producto] = [
-                    'nombre' => $nombre_db,
-                    'precio' => $precio_db,
-                    'cantidad' => $stock_disponible, // Ajusta la cantidad al stock máximo disponible
-                    'imagen' => $imagen_db
-                ];
-                $status_message = '<p class="warning-message">⚠️ Solo se pudo añadir hasta el stock disponible de "' . $nombre_db . '". Cantidad ajustada a ' . $stock_disponible . '.</p>';
-            } else {
-                 $status_message = '<p class="error-message">❌ No hay suficiente stock de "' . $nombre_db . '". Stock disponible: ' . $stock_disponible . '. Ya tienes ' . $cantidad_en_carrito . ' en el carrito.</p>';
-            }
+            $status_message = '<p class="success-message">✔️ Producto "' . $nombre_db . '" añadido al carrito.</p>';
         }
     } else {
-        $status_message = '<p class="error-message">❌ El producto no existe o fue eliminado.</p>';
+        $status_message = '<p class="error-message">❌ El producto no existe o está agotado.</p>';
     }
     $stmt->close();
-    // Redirigir para evitar reenvío del formulario al refrescar la página
+    
+    // Redirige para evitar el reenvío del formulario al refrescar
     header('Location: carrito.php?status_message=' . urlencode($status_message));
     exit();
 }
 
-// Si se recibe una acción de actualizar cantidad desde el propio carrito
+// Procesar la acción de actualizar la cantidad de un producto en el carrito
 if (isset($_POST['action']) && $_POST['action'] === 'update_quantity' && isset($_POST['id_producto']) && isset($_POST['cantidad'])) {
     $id_producto = (int)$_POST['id_producto'];
     $nueva_cantidad = (int)$_POST['cantidad'];
 
-    // Validar que la nueva cantidad sea al menos 0 (0 significa eliminar)
-    if ($nueva_cantidad < 0) {
-        $nueva_cantidad = 0;
-    }
-
     if (isset($_SESSION['carrito'][$id_producto])) {
-        // Obtener stock actual del producto desde la base de datos
-        $stmt = $conexion->prepare("SELECT nombre, stock FROM productos WHERE id_producto = ?");
-        if ($stmt === false) {
-            error_log('Error al preparar la consulta UPDATE SELECT en carrito.php: ' . $conexion->error);
-            $status_message = '<p class="error-message">❌ Error interno del servidor al verificar stock.</p>';
-            header('Location: carrito.php?status_message=' . urlencode($status_message));
-            exit();
-        }
+        if ($nueva_cantidad <= 0) {
+            // Si la cantidad es 0 o menos, eliminar el producto
+            $nombre_producto = $_SESSION['carrito'][$id_producto]['nombre'];
+            unset($_SESSION['carrito'][$id_producto]);
+            $status_message = '<p class="success-message">✔️ Producto "' . htmlspecialchars($nombre_producto) . '" eliminado del carrito.</p>';
+        } else {
+            // Verificar stock en la base de datos antes de actualizar
+            $stmt = $conexion->prepare("SELECT nombre, stock FROM productos WHERE id_producto = ?");
+            if ($stmt === false) {
+                error_log('Error al preparar consulta de stock en carrito.php: ' . $conexion->error);
+                $status_message = '<p class="error-message">❌ Error interno al verificar stock.</p>';
+                header('Location: carrito.php?status_message=' . urlencode($status_message));
+                exit();
+            }
+            $stmt->bind_param("i", $id_producto);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            if ($result->num_rows > 0) {
+                $producto_db = $result->fetch_assoc();
+                $stock_disponible = (int)$producto_db['stock'];
+                $nombre_db = htmlspecialchars($producto_db['nombre']);
 
-        $stmt->bind_param("i", $id_producto);
-        $stmt->execute();
-        $result = $stmt->get_result();
-
-        if ($result->num_rows > 0) {
-            $producto_db = $result->fetch_assoc();
-            $stock_disponible = $producto_db['stock'];
-            $nombre_db = htmlspecialchars($producto_db['nombre']);
-
-            if ($nueva_cantidad > 0) {
-                // Verificar si la nueva cantidad excede el stock disponible
                 if ($nueva_cantidad <= $stock_disponible) {
+                    // Actualizar la cantidad si hay stock suficiente
                     $_SESSION['carrito'][$id_producto]['cantidad'] = $nueva_cantidad;
                     $status_message = '<p class="success-message">✔️ Cantidad de "' . $nombre_db . '" actualizada.</p>';
                 } else {
-                    // Si la cantidad solicitada excede el stock, ajustarla al stock máximo
+                    // Si no hay suficiente stock, ajustar al máximo disponible
                     $_SESSION['carrito'][$id_producto]['cantidad'] = $stock_disponible;
-                    $status_message = '<p class="warning-message">⚠️ Solo hay ' . $stock_disponible . ' unidades de "' . $nombre_db . '" disponibles. Cantidad ajustada.</p>';
+                    $status_message = '<p class="warning-message">⚠️ La cantidad de "' . $nombre_db . '" se ajustó a ' . $stock_disponible . ', que es el stock disponible.</p>';
                 }
             } else {
-                // Si la cantidad es 0, eliminar el producto del carrito
+                // Si el producto ya no existe, eliminarlo del carrito
                 unset($_SESSION['carrito'][$id_producto]);
-                $status_message = '<p class="success-message">✔️ Producto "' . $nombre_db . '" eliminado del carrito.</p>';
+                $status_message = '<p class="error-message">❌ El producto ya no está disponible y fue eliminado del carrito.</p>';
             }
-        } else {
-            // Si el producto ya no existe en la base de datos, eliminarlo del carrito
-            unset($_SESSION['carrito'][$id_producto]);
-            $status_message = '<p class="error-message">❌ El producto ya no está disponible y fue eliminado del carrito.</p>';
+            $stmt->close();
         }
-        $stmt->close();
     } else {
         $status_message = '<p class="error-message">❌ El producto no se encontró en tu carrito.</p>';
     }
-    // Redirigir para evitar reenvío del formulario al refrescar la página
+    // Redirige para evitar el reenvío del formulario al refrescar
     header('Location: carrito.php?status_message=' . urlencode($status_message));
     exit();
 }
 
-// Si se recibe una acción de eliminar producto (usando GET para un enlace simple)
+// Procesar la acción de eliminar un producto (usando un enlace GET)
 if (isset($_GET['action']) && $_GET['action'] === 'remove_item' && isset($_GET['id_producto'])) {
     $id_producto = (int)$_GET['id_producto'];
     if (isset($_SESSION['carrito'][$id_producto])) {
@@ -157,22 +140,23 @@ if (isset($_GET['action']) && $_GET['action'] === 'remove_item' && isset($_GET['
     } else {
         $status_message = '<p class="error-message">❌ El producto no se encontró en tu carrito para eliminar.</p>';
     }
-    // Redirigir para evitar reenvío al refrescar
+    // Redirige para evitar el reenvío al refrescar
     header('Location: carrito.php?status_message=' . urlencode($status_message));
     exit();
 }
 
-// Obtener mensaje de estado si viene de una redirección (para mostrarlo después de las operaciones)
+// Obtener mensaje de estado si viene de una redirección (para mostrarlo en la página)
 if (isset($_GET['status_message'])) {
     $status_message = urldecode($_GET['status_message']);
 }
 
 // --- Calcular el total del carrito para mostrarlo en la página ---
 $total_carrito = 0;
-foreach ($_SESSION['carrito'] as $item) {
-    $total_carrito += $item['precio'] * $item['cantidad'];
+if (!empty($_SESSION['carrito'])) {
+    foreach ($_SESSION['carrito'] as $item) {
+        $total_carrito += $item['precio'] * $item['cantidad'];
+    }
 }
-
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -180,7 +164,6 @@ foreach ($_SESSION['carrito'] as $item) {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Carrito de Compras</title>
-    <link rel="stylesheet" href="../styles/Styles3.CSS" />
     <style>
         /* Estilos específicos para el carrito si no están en Styles3.CSS */
         .cart-item {
@@ -244,7 +227,7 @@ foreach ($_SESSION['carrito'] as $item) {
             width: fit-content;
             margin: 20px 0 0 auto;
             padding: 12px 25px;
-            background-color: #28a745; /* Color verde */
+            background-color:rgb(233, 119, 208); /* opciones de pago */
             color: white;
             text-decoration: none;
             border-radius: 5px;
@@ -263,12 +246,12 @@ foreach ($_SESSION['carrito'] as $item) {
             border: 1px dashed #ccc;
             border-radius: 8px;
             margin-top: 30px;
-            background-color: #f9f9f9;
+            background-color:rgb(245, 213, 243);
         }
         .btn.delete {
-            background-color: #dc3545; /* Color rojo para eliminar */
+            background-color:rgb(226, 125, 196); /* Color rojo para eliminar */
             color: white;
-            padding: 8px 12px;
+            padding: 15px 25px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
@@ -285,8 +268,8 @@ foreach ($_SESSION['carrito'] as $item) {
         }
         .success-message {
             color: #155724;
-            background-color: #d4edda;
-            border-color: #c3e6cb;
+            background-color:rgb(245, 128, 225);
+            border-color:rgb(172, 212, 202);
             padding: 10px;
             margin-bottom: 20px;
             border: 1px solid transparent;
@@ -311,10 +294,10 @@ foreach ($_SESSION['carrito'] as $item) {
             border-radius: .25rem;
         }
         .container {
-            max-width: 960px;
-            margin: 20px auto;
+            max-width: 999px;
+            margin: 60px auto;
             padding: 20px;
-            background-color: #f8f8f8;
+            background-color:rgb(248, 239, 247);
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
@@ -328,13 +311,119 @@ foreach ($_SESSION['carrito'] as $item) {
         header h1, footer p {
             margin: 0;
         }
+        footer{
+            background-color:rgb(236, 151, 203);
+        }
+        /* ESTILOS DEL ENCABEZADO (HEADER) */
+
+header {
+    width: 100%;
+    background-color: #ffffff; /* Fondo blanco para el área del encabezado */
+    padding: 20px 0; /* Espacio arriba y abajo del contenido del header */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Sombra sutil debajo del header */
+    display: flex; /* Usamos Flexbox para organizar el contenido */
+    flex-direction: column; /* Apila los elementos (logo y nav) verticalmente */
+    align-items: center; /* Centra los elementos hijos horizontalmente */
+    justify-content: center; /* Centra los elementos hijos verticalmente si hay espacio */
+}
+
+/* Contenedor del logo y el título */
+.logo {
+    text-align: center; /* Centra la imagen y el texto dentro de este div */
+    margin-bottom: 20px; /* Espacio entre el área del logo/título y la navegación */
+}
+
+/* Estilo para la imagen del logo */
+.site-logo {
+    height: 150px; /* Altura fija para el logo como en tu imagen */
+    width: auto; /* Mantiene la proporción de la imagen */
+    display: block; /* Hace que la imagen se comporte como un bloque para que el h2 vaya debajo */
+    margin: 0 auto 5px auto; /* Centra la imagen horizontalmente y le da un pequeño margen inferior para separar del título */
+}
+
+/* Estilo para el título "Dulces Creaciones" */
+.site-title {
+    color: #ff69b4; /* Color rosa fuerte */
+    font-family: 'Arial', sans-serif; /* Puedes cambiar esto por una fuente más artística si la importas */
+    font-size: 2.5em; /* Tamaño del texto del título */
+    margin: 0; /* Elimina los márgenes predeterminados del h2 */
+    line-height: 1.2; /* Ajusta el espaciado de línea si la fuente es muy grande */
+}
+
+/* Estilos para la navegación principal */
+.main-nav ul {
+    list-style: none; /* Elimina los puntos de la lista */
+    padding: 0;
+    margin: 0;
+    display: flex; /* Hace que los elementos de la lista se muestren en fila */
+    justify-content: center; /* Centra los elementos de la navegación horizontalmente */
+    flex-wrap: wrap; /* Permite que los elementos se envuelvan a la siguiente línea en pantallas pequeñas */
+    gap: 20px; /* Espacio entre cada elemento de la navegación (Inicio, Mi Perfil, etc.) */
+}
+
+.main-nav li {
+    /* No necesita margen lateral si usas 'gap' en el 'ul' */
+}
+
+.main-nav a {
+    text-decoration: none; /* Elimina el subrayado de los enlaces */
+    color: #ff69b4; /* Color rosa fuerte para los enlaces */
+    font-weight: bold;
+    padding: 8px 15px; /* Espacio interno de los enlaces para que parezcan botones */
+    transition: color 0.3s ease, background-color 0.3s ease; /* Transición suave para efectos hover */
+    border-radius: 5px; /* Bordes ligeramente redondeados */
+}
+
+.main-nav a:hover {
+    color: #ffffff; /* Texto blanco al pasar el ratón */
+    background-color: #ff1493; /* Fondo rosa más oscuro al pasar el ratón */
+}
+
+/* Media Queries para responsividad (ajustes para pantallas más pequeñas) */
+@media (max-width: 768px) {
+    header {
+        padding: 15px 0;
+    }
+
+    .site-logo {
+        height: 100px; /* Reduce el tamaño del logo en pantallas pequeñas */
+        margin-bottom: 5px;
+    }
+
+    .site-title {
+        font-size: 1.8em; /* Reduce el tamaño del título en pantallas pequeñas */
+    }
+
+    .main-nav ul {
+        flex-direction: column; /* Apila los elementos de la navegación verticalmente */
+        align-items: center; /* Centra los enlaces apilados */
+        gap: 10px; /* Menos espacio vertical entre enlaces apilados */
+        margin-top: 10px; /* Un poco de espacio extra arriba de la nav cuando está apilada */
+    }
+
+    .main-nav a {
+        width: calc(100% - 30px); /* Asegura que el enlace ocupe casi todo el ancho disponible */
+        text-align: center; /* Centra el texto dentro del enlace */
+        max-width: 200px; /* Limita el ancho máximo para que no se extienda demasiado */
+    }
+}
     </style>
 </head>
 <body>
-
 <header>
-    <?php include('../including/navbar.php'); ?>
-</header>
+<div class="logo">
+    <img src="/pagina_pasteleria/imagenes/logo.jpg.jpeg" alt="Dulces Creaciones Logo" class="site-logo">
+    <h2 class="site-title">Dulces Creaciones</h2>
+</div>
+         <nav class="main-nav">
+        <ul>
+            <li><a href="/pagina_pasteleria/index.php">Inicio</a></li>
+            <li><a href="/pagina_pasteleria/perfil.php">Mi Perfil</a></li>
+            <li><a href="/pagina_pasteleria/login/cerrar_sesion.php">Cerrar Sesión</a></li>
+        </ul>
+    </nav>
+    </header>
+
 
 <main class="container">
     <section aria-labelledby="cart-title">
@@ -363,23 +452,25 @@ foreach ($_SESSION['carrito'] as $item) {
                         <?php endif; ?>
                         <div class="cart-item-details">
                             <h3><?php echo htmlspecialchars($item['nombre']); ?></h3>
-                            <p>Precio Unitario: $<?php echo number_format($item['precio'], 2); ?></p>
-                            <p>Subtotal: $<?php echo number_format($item['precio'] * $item['cantidad'], 2); ?></p>
+                            <p style= "bold; font-size: 1.2em;">Precio Unitario: $<?php echo number_format($item['precio'], 2); ?></p>
+                            <p  style= "bold; font-size: 1.0em;">Subtotal: $<?php echo number_format($item['precio'] * $item['cantidad'], 2); ?></p>
                         </div>
                         <div class="cart-item-actions">
                             <form action="carrito.php" method="post">
                                 <input type="hidden" name="action" value="update_quantity">
                                 <input type="hidden" name="id_producto" value="<?php echo (int)$id_producto; ?>">
-                                <label for="quantity-<?php echo (int)$id_producto; ?>" class="sr-only">Cantidad:</label>
+                                <label for="quantity-<?php echo (int)$id_producto; ?>" class="sr-only" style="bold; font-size: 1.3em;">Cantidad:</label>
                                 <input type="number"
                                     id="quantity-<?php echo (int)$id_producto; ?>"
                                     name="cantidad"
                                     value="<?php echo (int)$item['cantidad']; ?>"
                                     min="0"
-                                    onchange="this.form.submit()" /> </form>
-                            <a class="btn delete" href="carrito.php?action=remove_item&id_producto=<?php echo (int)$id_producto; ?>"
+                                    onchange="this.form.submit()" />
+                            </form>
+                            <a class="btn delete"
+                               href="carrito.php?action=remove_item&id_producto=<?php echo (int)$id_producto; ?>"
                                onclick="return confirm('¿Estás seguro de que deseas eliminar este producto del carrito?');"
-                               role="button" aria-label="Eliminar <?php echo htmlspecialchars($item['nombre']); ?> del carrito">Eliminar</a>
+                               role="button" aria-label="Eliminar <?php echo htmlspecialchars($item['nombre']); ?> del carrito" style="font-weight: bold; font-size: 1.2em; color:black;">Eliminar</a>
                         </div>
                     </div>
                 <?php endforeach; ?>
@@ -388,19 +479,21 @@ foreach ($_SESSION['carrito'] as $item) {
                     Total: $<?php echo number_format($total_carrito, 2); ?>
                 </div>
 
-                <nav aria-label="Acciones del carrito">
-                    <a href="#" class="btn checkout-btn">Proceder al pago</a>
-                    <a href="../admin/productos.php" class="btn checkout-btn" style="background-color: #6c757d; margin-left: 10px;">Continuar Comprando</a>
+                <nav aria-label="Acciones del carrito" style="text-align: right; margin-top: 20px;">
+                    <a href="tarjeta.php" class="btn checkout-btn" style="color:black;">Pagar con Tarjeta</a>
+                    <a href="efectivo.php" class="btn checkout-btn">Pagar en Efectivo</a>
+                    <a href="../admin/productos.php" class="btn checkout-btn" style="background-color:rgb(236, 151, 203); margin-left: 10px;">Continuar Comprando</a>
                 </nav>
             </article>
         <?php endif; ?>
 
     </section>
-</main>
+</main><br><br><br><br><br><br><br><br>
 
-<footer>
-    <p>&copy; 2025 Mi Tienda</p>
+<footer style="color: black;">
+    <p>&copy; <?php echo date('Y'); ?> Mi Tienda</p>
 </footer>
+
 
 </body>
 </html>
