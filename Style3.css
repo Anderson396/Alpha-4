@@ -4,7 +4,7 @@ body {
     margin: 0;
     padding: 0;
     background-color: #77e1bd; /* Un gris muy claro para el fondo */
-    color: #333; /* Color de texto base oscuro */
+    color: #080707; /* Color de texto base oscuro */
     line-height: 1.6;
     box-sizing: border-box; /* Incluye padding y border en el tamaño total */
       background: #EEAECA;
@@ -23,7 +23,7 @@ background: radial-gradient(circle,rgba(238, 174, 202, 1) 0%, rgba(148, 187, 233
 
 /* Estilos para encabezados (h1, h2, h3, etc.) */
 h1, h2, h3 {
-    color: #000000; /* Un azul oscuro para los encabezados */
+    color: #000000; /* negro para los encabezados */
     text-align: center;
     margin-bottom: 25px;
 }
@@ -35,7 +35,7 @@ p {
 
 /* --- Navegación (Navbar) --- */
 .navbar {
-    background-color: #3498db; /* Azul vibrante para la barra de navegación */
+    background-color: #3498db; /* para la barra de navegación */
     color: rgb(164, 238, 226);
     padding: 15px 0;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
@@ -55,22 +55,17 @@ p {
 }
 
 .navbar ul li a {
-    color: white;
+    color: rgb(17, 8, 8);
     text-decoration: none;
     font-weight: bold;
     padding: 5px 10px;
     transition: background-color 0.3s ease;
 }
 
-.navbar ul li a:hover {
-    background-color: rgba(255, 255, 255, 0.2); /* Fondo ligeramente transparente al pasar el mouse */
-    border-radius: 4px;
-}
-
 /* --- Botones Generales (`.btn`) --- */
 .btn {
     display: inline-block; /* Permite aplicar padding y margin */
-    background-color: #e0bfe0; /* Azul estándar para botones primarios */
+    background-color: #e673ba; /* Color para botones de editar y eliminar */
     color: rgb(18, 11, 11);
     padding: 10px 18px;
     border: none;
@@ -84,19 +79,8 @@ p {
 }
 
 .btn:hover {
-    background-color: #c5c5e8; /* Azul más oscuro al pasar el mouse */
+    background-color: #e4d4e4; /* al pasar el mouse */
     transform: translateY(-1px); /* Ligero efecto de elevación */
-}
-
-/* Clases específicas para botones de acción (Modificar, Eliminar) */
-/* El botón de modificar puede usar el estilo .btn por defecto o uno específico si quieres */
-.btn.modificar { /* Si usas una clase específica para modificar */
-    background-color: #ffc107; /* Amarillo/naranja */
-    color: #333;
-}
-
-.btn.modificar:hover {
-    background-color: #e0a800;
 }
 
 .btn.eliminar { /* Para el botón de eliminar */
@@ -107,18 +91,14 @@ p {
     background-color: #c82333;
 }
 
-.btn-success { /* Para el botón "Agregar Producto" */
-    background-color: #2c28a7; /* Verde */
-}
-
 .btn-success:hover {
-    background-color: #218838;
+    background-color:  #cca4cc;
 }
 
 /* --- Formularios (Aplicado a contenedores de formulario como .producto-form) --- */
 /* Esta sección es relevante si tienes el formulario de agregar/modificar en el mismo style.css */
 .producto-form, .login-form, .register-form { /* Clases para contenedores de formularios específicos */
-    background-color: #dfbdd3;
+    background-color: #e488ae;
     padding: 30px;
     border-radius: 8px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
@@ -131,7 +111,7 @@ p {
 form label {
     display: block;
     margin-bottom: 8px;
-    color: #555;
+    color: #000000;
     font-weight: bold;
 }
 
@@ -144,7 +124,7 @@ form input[type="file"] {
     width: 100%;
     padding: 12px;
     margin-bottom: 20px;
-    border: 1px solid #ccc;
+    border: 1px solid #f382cd;
     border-radius: 5px;
     font-size: 1em;
     box-sizing: border-box;
@@ -155,11 +135,11 @@ form input[type="file"] {
 }
 
 form button[type="submit"]:hover {
-    background-color: #218838;
+    background-color: #e683c0;
 }
 form button[type="submit"] {
-    background-color: #28a745; /* Verde para enviar formularios */
-    color: white;
+    background-color: #e683c0; /* color para agregar al carrito */
+    color: rgb(8, 5, 5);/*color de la letra de carrito*/
     padding: 12px 20px;
     border: none;
     border-radius: 5px;
@@ -184,9 +164,9 @@ form button[type="submit"] {
 }
 
 .success-message {
-    background-color: #e6ffe6; /* Fondo verde claro */
-    color: #28a745; /* Texto verde oscuro */
-    border: 1px solid #28a745;
+    background-color: #e6ffe6; /* Fondo claro */
+    color: #eb5db0; /* Texto */
+    border: 1px solid #d3a1d0;
 }
 
 
@@ -200,7 +180,7 @@ table {
     width: 100%;
     border-collapse: collapse; /* Elimina el espacio entre celdas */
     margin-top: 20px;
-    background-color: #fff;
+    background-color: #ecdde9;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     border-radius: 8px; /* Bordes ligeramente redondeados para la tabla */
     overflow: hidden; /* Asegura que los bordes redondeados se apliquen bien */
@@ -215,14 +195,14 @@ table th, table td {
 
 table th {
     background: radial-gradient(circle,rgba(238, 174, 202, 7) 0%, rgba(148, 187, 233, 1) 100%); /* Fondo para los encabezados de columna */
-    color: #555;
+    color: #000000;
     font-weight: bold;
     text-transform: uppercase; /* Texto en mayúsculas para los encabezados */
     font-size: 0.9em;
 }
 
 table tbody tr:hover {
-    background-color: #f9f9f9; /* Efecto de resaltado al pasar el mouse por una fila */
+    background-color: #e0c7e4; /* Efecto de resaltado al pasar el mouse por una fila */
 }
 
 /* Estilo para las imágenes dentro de la tabla */
@@ -233,12 +213,6 @@ table td img {
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
-/* Alineación de las celdas de acciones */
-table td:last-child {
-    text-align: center; /* Centrar los botones de acción */
-    white-space: nowrap; /* Evita que los botones se envuelvan a la siguiente línea */
-}
-
 
 /* Estilos para el pie de página */
 footer {
@@ -246,7 +220,7 @@ footer {
     padding: 15px; /* Reducido de 25px a 15px para hacer la línea "menos larga" visualmente */
     margin-top: 8px;
     border-top: 0px solid #eee; /* La línea gris clara */
-    color: #777;
+    color: #000000;
     font-size: 1.9em;
     background-color: #f9f9f9; /* Fondo claro para el footer */
     width: 100%; /* Asegura que el footer ocupe todo el ancho */
@@ -260,24 +234,6 @@ background: radial-gradient(circle,rgba(238, 174, 202, 1) 0%, rgba(148, 187, 233
     .container {
         width: 95%;
         margin: 15px auto;
-    }
-
-    .navbar ul {
-        flex-direction: column; /* Apilar elementos de navegación en pantallas pequeñas */
-        align-items: center;
-    }
-
-    .navbar ul li {
-        margin: 10px 0;
-    }
-
-    h1, h2 {
-        font-size: 1.5em;
-    }
-
-    .btn {
-        padding: 10px 15px;
-        font-size: 0.95em;
     }
 
     /* Ajuste para tablas en pantallas pequeñas: hace que la tabla se vea como tarjetas */
@@ -309,7 +265,10 @@ background: radial-gradient(circle,rgba(238, 174, 202, 1) 0%, rgba(148, 187, 233
     }
 
     table td:last-child {
-        text-align: center; /* Asegura que los botones de acción se centren */
+        /* Aquí también aplicamos flexbox para móviles */
+        display: flex;
+        justify-content: center;
+        align-items: center;
         padding-left: 15px; /* Restaura padding normal si la última celda no necesita etiqueta */
     }
 
@@ -323,21 +282,11 @@ background: radial-gradient(circle,rgba(238, 174, 202, 1) 0%, rgba(148, 187, 233
         white-space: nowrap;
         text-align: left;
         font-weight: bold;
-        color: #555;
+        color: #000000;
     }
     /* Pseudo-elementos para cada columna para que se vea la etiqueta en móviles */
     table td:nth-of-type(1):before { content: "Nombre:"; }
     table td:nth-of-type(2):before { content: "Precio:"; }
     table td:nth-of-type(3):before { content: "Imagen:"; }
     table td:nth-of-type(4):before { content: "Acciones:"; }
-}
-
-@media (max-width: 480px) {
-    .navbar {
-        padding: 10px 0;
-    }
-
-    .navbar ul li {
-        margin: 8px 0;
-    }
 }
