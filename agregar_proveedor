@@ -13,6 +13,7 @@ if (!$conexion) {
 $nombre = '';
 $producto = '';
 $telefono = '';
+$direccion = ''; // Nueva variable para la dirección
 $form_error = ''; // Para almacenar errores del formulario
 
 // 1. Procesar el formulario cuando se envía (POST)
@@ -21,6 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nombre = trim($_POST['nombre'] ?? '');
     $producto = trim($_POST['producto'] ?? '');
     $telefono = trim($_POST['telefono'] ?? '');
+    $direccion = trim($_POST['direccion'] ?? ''); // Recoger el campo de dirección
 
     // 3. Validar los datos (ejemplos básicos)
     if (empty($nombre)) {
@@ -29,21 +31,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $form_error = 'El producto principal es obligatorio.';
     } elseif (empty($telefono)) {
         $form_error = 'El número de teléfono es obligatorio.';
+    } elseif (empty($direccion)) { // Nueva validación para la dirección
+        $form_error = 'La dirección es obligatoria.';
     }
     // Puedes añadir más validaciones, por ejemplo, formato de teléfono, longitud, etc.
 
     // 4. Si no hay errores de validación, intentar guardar en la base de datos
     if (empty($form_error)) {
         // Prepara la consulta SQL para insertar un nuevo proveedor
-        // ASEGÚRATE DE QUE LOS NOMBRES DE LAS COLUMNAS coincidan exactamente con tu base de datos
-        $stmt = $conexion->prepare("INSERT INTO proveedores (nombre, producto, telefono) VALUES (?, ?, ?)");
+        // ¡Importante! Asegúrate de que tu tabla 'proveedores' tiene una columna llamada 'direccion'
+        $stmt = $conexion->prepare("INSERT INTO proveedores (nombre, producto, telefono, direccion) VALUES (?, ?, ?, ?)");
 
         if ($stmt === false) {
             $form_error = "Error al preparar la consulta de inserción: " . $conexion->error;
         } else {
             // Vincula los parámetros
-            // 'sss' indica que los tres parámetros son de tipo string
-            $stmt->bind_param("sss", $nombre, $producto, $telefono);
+            // 'ssss' indica que los cuatro parámetros son de tipo string
+            $stmt->bind_param("ssss", $nombre, $producto, $telefono, $direccion);
 
             // Ejecuta la consulta
             if ($stmt->execute()) {
@@ -69,85 +73,115 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link href="https://fonts.googleapis.com/css2?family=Savate&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../styles/Style4.css">
     <style>
-        /* Estilos específicos para el formulario de agregar */
+        body {
+            background: linear-gradient(to right, #c1d7f1, #f8c5d9);
+            font-family: 'Savate', sans-serif;
+            font-size: 18px; /* Tamaño de fuente base más grande */
+            color: #222; /* Color de texto casi negro */
+        }
+
+        .contenedor { /* Contenedor principal de la página, para el fondo */
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
         .form-container {
-            background-color: #ffffff;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            max-width: 500px;
-            margin: 30px auto;
+            background-color: rgba(255, 255, 255, 0.9); /* Fondo blanco semitransparente para que se vea el color del fondo principal */
+            padding: 40px; /* Más padding para espacio */
+            border-radius: 12px; /* Bordes más redondeados */
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Sombra más pronunciada para que resalte */
+            max-width: 550px; /* Ancho máximo para el formulario */
+            width: 90%; /* Ajuste de ancho responsivo */
+            box-sizing: border-box; /* Asegura que padding y border se incluyan en el ancho */
         }
         .form-container h1 {
             text-align: center;
-            color: #333;
-            margin-bottom: 25px;
+            color: #222; /* Título casi negro */
+            margin-bottom: 35px; /* Más espacio debajo del título */
+            font-size: 2.5em; /* Título grande */
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
         }
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 20px; /* Más espacio entre grupos de formulario */
         }
         .form-group label {
             display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #555;
+            margin-bottom: 8px; /* Espacio debajo de la etiqueta */
+            font-weight: bold; /* Etiquetas en negrita */
+            color: #333; /* Color oscuro para las etiquetas */
+            font-size: 1.1em; /* Etiquetas más grandes */
         }
         .form-group input[type="text"] {
-            width: calc(100% - 20px); /* Ajusta para padding */
-            padding: 10px;
+            width: 100%; /* Ocupa el 100% del ancho del contenedor */
+            padding: 12px 15px; /* Más padding para los inputs */
             border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 16px;
-            box-sizing: border-box; /* Incluye padding y border en el ancho total */
+            border-radius: 6px; /* Bordes más redondeados */
+            font-size: 1.05em; /* Texto dentro del input más grande */
+            box-sizing: border-box;
+            color: #333; /* Texto de input casi negro */
         }
         .form-group input[type="text"]:focus {
-            border-color: #007bff;
+            border-color: #f8c5d9; /* Color de borde al enfocar, usando un color del fondo */
             outline: none;
-            box-shadow: 0 0 5px rgba(0, 123, 255, 0.25);
+            box-shadow: 0 0 8px rgba(248, 197, 217, 0.5); /* Sombra suave al enfocar */
         }
-        .btn-submit {
-            background-color: #28a745; /* Verde para enviar */
-            color: white;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 18px;
-            width: 100%;
-            transition: background-color 0.3s ease;
-        }
-        .btn-submit:hover {
-            background-color: #218838; /* Verde más oscuro al pasar el ratón */
-        }
+
+        /* Botones: Estilo unificado y que combine con el fondo */
+        .btn-submit,
         .btn-back {
             display: block;
-            width: calc(100% - 40px); /* Para que el botón ocupe casi todo el ancho */
-            text-align: center;
-            padding: 10px 20px;
-            margin-top: 15px;
-            background-color: #6c757d; /* Gris para volver */
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            transition: background-color 0.3s ease;
+            width: 100%;
+            padding: 15px 20px; /* Padding generoso - MISMO PARA AMBOS */
+            border: none;
+            border-radius: 8px; /* Bordes redondeados */
+            cursor: pointer;
+            font-size: 1.15em; /* Texto de los botones más grande */
+            font-weight: bold;
+            color: #222; /* Texto de los botones casi negro */
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-sizing: border-box; /* Crucial para que el padding no añada al ancho total */
         }
+
+        .btn-submit {
+            background-color: rgba(238, 182, 203, 0.85); /* Tono rosado suave, similar a los botones de listar */
+            margin-top: 20px; /* Espacio entre el último input y el primer botón */
+            margin-bottom: 15px; /* Espacio entre el botón de Guardar y Volver */
+        }
+
+        .btn-submit:hover {
+            background-color: rgba(221, 157, 181, 0.95); /* Un poco más oscuro al pasar el ratón */
+            transform: translateY(-2px);
+        }
+
+        .btn-back {
+            background-color: rgba(193, 215, 241, 0.85); /* Tono azul claro, similar al otro lado del fondo */
+            text-decoration: none; /* Si es un enlace */
+        }
+
         .btn-back:hover {
-            background-color: #5a6268;
+            background-color: rgba(170, 190, 220, 0.95); /* Un poco más oscuro al pasar el ratón */
+            transform: translateY(-2px);
         }
+
         .error-message {
             background-color: #f8d7da;
             color: #721c24;
-            padding: 10px;
+            padding: 12px; /* Más padding */
             border: 1px solid #f5c6cb;
-            border-radius: 5px;
-            margin-bottom: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
             text-align: center;
+            font-size: 1em; /* Tamaño de error normal */
+            font-weight: 500;
         }
     </style>
 </head>
 <body>
-    <main class="contenedor">
-        <div class="form-container">
+    <div class="contenedor"> <div class="form-container">
             <h1>Agregar Nuevo Proveedor</h1>
 
             <?php if (!empty($form_error)): ?>
@@ -172,10 +206,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <input type="text" id="telefono" name="telefono" value="<?php echo htmlspecialchars($telefono); ?>" required>
                 </div>
 
+                <div class="form-group">
+                    <label for="direccion">Dirección:</label>
+                    <input type="text" id="direccion" name="direccion" value="<?php echo htmlspecialchars($direccion); ?>" required>
+                </div>
+
                 <button type="submit" class="btn-submit">Guardar Proveedor</button>
                 <a href="listar_proveedores.php" class="btn-back">Volver al Listado</a>
             </form>
         </div>
-    </main>
+    </div>
 </body>
 </html>
