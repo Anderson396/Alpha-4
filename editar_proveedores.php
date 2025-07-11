@@ -14,14 +14,15 @@ $id_proveedor = null;
 $nombre = '';
 $producto = '';
 $telefono = '';
+$direccion = ''; // Agregado: Variable para la dirección
 $form_error = ''; // Para almacenar errores del formulario
 
-// 1. Lógica para obtener los datos del proveedor (cuando la página se carga por primera vez)
-if (isset($_GET['id'])) {
+// 1. Lógica para obtener los datos del proveedor (cuando la página se carga por primera vez o hay un error de POST)
+if (isset($_GET['id']) && $_SERVER['REQUEST_METHOD'] !== 'POST') {
     $id_proveedor = $_GET['id'];
 
-    // Prepara la consulta para seleccionar los datos del proveedor
-    $stmt = $conexion->prepare("SELECT id_proveedor, nombre, producto, telefono FROM proveedores WHERE id_proveedor = ?");
+    // Prepara la consulta para seleccionar los datos del proveedor, incluyendo la dirección
+    $stmt = $conexion->prepare("SELECT id_proveedor, nombre, producto, telefono, direccion FROM proveedores WHERE id_proveedor = ?");
 
     if ($stmt === false) {
         $_SESSION['error'] = "Error al preparar la consulta de selección: " . $conexion->error;
@@ -38,13 +39,14 @@ if (isset($_GET['id'])) {
         $nombre = $proveedor['nombre'];
         $producto = $proveedor['producto'];
         $telefono = $proveedor['telefono'];
+        $direccion = $proveedor['direccion']; // Asignar la dirección obtenida
     } else {
         $_SESSION['error'] = "Proveedor no encontrado.";
         header("Location: listar_proveedores.php");
         exit();
     }
     $stmt->close();
-} elseif ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+} elseif ($_SERVER['REQUEST_METHOD'] !== 'POST' && !isset($_GET['id'])) {
     // Si no hay ID en la URL y no es un envío de formulario, es un acceso inválido
     $_SESSION['error'] = "No se especificó ningún proveedor para editar.";
     header("Location: listar_proveedores.php");
@@ -54,11 +56,12 @@ if (isset($_GET['id'])) {
 
 // 2. Lógica para procesar el envío del formulario (cuando el usuario guarda los cambios)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Recoger y sanear los datos del formulario, incluyendo el ID oculto
+    // Recoger y sanear los datos del formulario, incluyendo el ID oculto y la dirección
     $id_proveedor = trim($_POST['id_proveedor'] ?? '');
     $nombre = trim($_POST['nombre'] ?? '');
     $producto = trim($_POST['producto'] ?? '');
     $telefono = trim($_POST['telefono'] ?? '');
+    $direccion = trim($_POST['direccion'] ?? ''); // Recoger la dirección del POST
 
     // Validar los datos
     if (empty($id_proveedor) || !is_numeric($id_proveedor)) {
@@ -69,21 +72,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $form_error = 'El producto principal es obligatorio.';
     } elseif (empty($telefono)) {
         $form_error = 'El número de teléfono es obligatorio.';
+    } elseif (empty($direccion)) { // Nueva validación para la dirección
+        $form_error = 'La dirección es obligatoria.';
     }
     // Puedes añadir más validaciones aquí
 
     // Si no hay errores de validación, intentar actualizar en la base de datos
     if (empty($form_error)) {
-        // Prepara la consulta SQL para actualizar el proveedor
-        // ASEGÚRATE DE QUE LOS NOMBRES DE LAS COLUMNAS coincidan con tu DB
-        $stmt = $conexion->prepare("UPDATE proveedores SET nombre = ?, producto = ?, telefono = ? WHERE id_proveedor = ?");
+        // Prepara la consulta SQL para actualizar el proveedor, incluyendo la dirección
+        // ¡Importante! Asegúrate de que tu tabla 'proveedores' tiene una columna llamada 'direccion'
+        $stmt = $conexion->prepare("UPDATE proveedores SET nombre = ?, producto = ?, telefono = ?, direccion = ? WHERE id_proveedor = ?");
 
         if ($stmt === false) {
             $form_error = "Error al preparar la consulta de actualización: " . $conexion->error;
         } else {
             // Vincula los parámetros
-            // 'sssi' indica 3 strings y 1 entero
-            $stmt->bind_param("sssi", $nombre, $producto, $telefono, $id_proveedor);
+            // 'ssssi' indica 4 strings y 1 entero (para el ID)
+            $stmt->bind_param("ssssi", $nombre, $producto, $telefono, $direccion, $id_proveedor);
 
             // Ejecuta la consulta
             if ($stmt->execute()) {
@@ -109,84 +114,123 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link href="https://fonts.googleapis.com/css2?family=Savate&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../styles/Style4.css">
     <style>
-        /* Estilos específicos para el formulario de editar */
+        body {
+            background: linear-gradient(to right, #c1d7f1, #f8c5d9);
+            font-family: 'Savate', sans-serif;
+            font-size: 18px; /* Tamaño de fuente base más grande */
+            color: #222; /* Color de texto casi negro */
+        }
+
+        .contenedor { /* Contenedor principal de la página, para el fondo */
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
         .form-container {
-            background-color: #ffffff;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            max-width: 500px;
-            margin: 30px auto;
+            background-color: rgba(255, 255, 255, 0.9); /* Fondo blanco semitransparente */
+            padding: 40px; /* Más padding para espacio */
+            border-radius: 12px; /* Bordes más redondeados */
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Sombra más pronunciada */
+            max-width: 550px; /* Ancho máximo para el formulario */
+            width: 90%; /* Ajuste de ancho responsivo */
+            box-sizing: border-box; /* Asegura que padding y border se incluyan en el ancho */
         }
         .form-container h1 {
             text-align: center;
-            color: #333;
-            margin-bottom: 25px;
+            color: #222; /* Título casi negro */
+            margin-bottom: 35px; /* Más espacio debajo del título */
+            font-size: 2.5em; /* Título grande */
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
         }
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 20px; /* Más espacio entre grupos de formulario */
         }
         .form-group label {
             display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #555;
+            margin-bottom: 8px; /* Espacio debajo de la etiqueta */
+            font-weight: bold; /* Etiquetas en negrita */
+            color: #333; /* Color oscuro para las etiquetas */
+            font-size: 1.1em; /* Etiquetas más grandes */
         }
-        .form-group input[type="text"] {
-            width: calc(100% - 20px);
-            padding: 10px;
+        /* Estilo para los inputs de texto y el input ID (lectura) */
+        .form-group input[type="text"],
+        .form-group input[type="number"], /* si el ID fuera number */
+        .form-group input[type="text"][readonly] {
+            width: 100%; /* Ocupa el 100% del ancho del contenedor */
+            padding: 12px 15px; /* Más padding para los inputs */
             border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 16px;
+            border-radius: 6px; /* Bordes más redondeados */
+            font-size: 1.05em; /* Texto dentro del input más grande */
             box-sizing: border-box;
+            color: #333; /* Texto de input casi negro */
         }
         .form-group input[type="text"]:focus {
-            border-color: #007bff;
+            border-color: #f8c5d9; /* Color de borde al enfocar, usando un color del fondo */
             outline: none;
-            box-shadow: 0 0 5px rgba(0, 123, 255, 0.25);
+            box-shadow: 0 0 8px rgba(248, 197, 217, 0.5); /* Sombra suave al enfocar */
         }
-        .btn-submit {
-            background-color: #007bff; /* Azul para guardar cambios */
-            color: white;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 18px;
-            width: 100%;
-            transition: background-color 0.3s ease;
+        /* Estilo específico para input de solo lectura */
+        .form-group input[readonly] {
+            background-color: #f0f0f0; /* Fondo ligeramente gris para indicar que es de solo lectura */
+            cursor: not-allowed; /* Cambia el cursor para indicar que no se puede editar */
         }
-        .btn-submit:hover {
-            background-color: #0056b3; /* Azul más oscuro al pasar el ratón */
-        }
+
+        /* Botones: Estilo unificado y que combine con el fondo */
+        .btn-submit,
         .btn-back {
             display: block;
-            width: calc(100% - 40px);
-            text-align: center;
-            padding: 10px 20px;
-            margin-top: 15px;
-            background-color: #6c757d; /* Gris para volver */
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            transition: background-color 0.3s ease;
+            width: 100%;
+            padding: 15px 20px; /* MISMO PADDING PARA AMBOS */
+            border: none;
+            border-radius: 8px; /* Bordes redondeados */
+            cursor: pointer;
+            font-size: 1.15em; /* Texto de los botones más grande */
+            font-weight: bold;
+            color: #222; /* Texto de los botones casi negro */
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-sizing: border-box; /* Fundamental para que el padding se incluya en el ancho total del 100% */
         }
+
+        .btn-submit {
+            background-color: rgba(238, 182, 203, 0.85); /* Tono rosado suave, similar a los botones de agregar */
+            margin-top: 20px; /* Espacio entre el último input y el primer botón */
+            margin-bottom: 15px; /* Espacio entre el botón de Guardar y Volver */
+        }
+
+        .btn-submit:hover {
+            background-color: rgba(221, 157, 181, 0.95); /* Un poco más oscuro al pasar el ratón */
+            transform: translateY(-2px);
+        }
+
+        .btn-back {
+            background-color: rgba(193, 215, 241, 0.85); /* Tono azul claro, similar al otro lado del fondo */
+            text-decoration: none; /* Si es un enlace */
+        }
+
         .btn-back:hover {
-            background-color: #5a6268;
+            background-color: rgba(170, 190, 220, 0.95); /* Un poco más oscuro al pasar el ratón */
+            transform: translateY(-2px);
         }
+
         .error-message {
             background-color: #f8d7da;
             color: #721c24;
-            padding: 10px;
+            padding: 12px;
             border: 1px solid #f5c6cb;
-            border-radius: 5px;
-            margin-bottom: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
             text-align: center;
+            font-size: 1em;
+            font-weight: 500;
         }
     </style>
 </head>
 <body>
-    <main class="contenedor">
+    <div class="contenedor">
         <div class="form-container">
             <h1>Editar Proveedor</h1>
 
@@ -198,6 +242,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <form action="editar_proveedores.php" method="POST">
                 <input type="hidden" name="id_proveedor" value="<?php echo htmlspecialchars($id_proveedor); ?>">
+
+                <div class="form-group">
+                    <label for="id_proveedor_display">ID de Proveedor:</label>
+                    <input type="text" id="id_proveedor_display" value="<?php echo htmlspecialchars($id_proveedor); ?>" readonly>
+                </div>
 
                 <div class="form-group">
                     <label for="nombre">Nombre del Proveedor:</label>
@@ -214,10 +263,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <input type="text" id="telefono" name="telefono" value="<?php echo htmlspecialchars($telefono); ?>" required>
                 </div>
 
+                <div class="form-group">
+                    <label for="direccion">Dirección:</label>
+                    <input type="text" id="direccion" name="direccion" value="<?php echo htmlspecialchars($direccion); ?>" required>
+                </div>
+
                 <button type="submit" class="btn-submit">Guardar Cambios</button>
                 <a href="listar_proveedores.php" class="btn-back">Cancelar y Volver</a>
             </form>
         </div>
-    </main>
+    </div>
 </body>
 </html>
